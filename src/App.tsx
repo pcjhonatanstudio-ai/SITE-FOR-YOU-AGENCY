@@ -187,14 +187,34 @@ const DIFFERENTIALS: Differential[] = [
 
 const VideoItem = ({ src, title }: { src: string; title?: string }) => {
   const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const toggleMute = () => {
+    const nextMuteState = !isMuted;
+    setIsMuted(nextMuteState);
+    
+    if (iframeRef.current?.contentWindow) {
+      const command = nextMuteState ? 'mute' : 'unMute';
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command, args: '' }),
+        '*'
+      );
+      // Garantir que o vídeo continue tocando após o comando
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: 'playVideo', args: '' }),
+        '*'
+      );
+    }
+  };
 
   return (
     <div 
       className="w-full h-full relative cursor-pointer group" 
-      onClick={() => setIsMuted(!isMuted)}
+      onClick={toggleMute}
     >
       <iframe 
-        src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=${isMuted ? 1 : 0}&playsinline=1`}
+        ref={iframeRef}
+        src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=1&playsinline=1&enablejsapi=1`}
         className="w-full h-full pointer-events-none"
         title={title}
         allow="autoplay; encrypted-media; picture-in-picture"
