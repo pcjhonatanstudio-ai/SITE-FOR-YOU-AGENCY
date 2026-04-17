@@ -27,7 +27,9 @@ import {
   ShieldCheck,
   Users,
   DollarSign,
-  Activity
+  Activity,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 // --- Types ---
@@ -118,16 +120,7 @@ const SERVICES: Service[] = [
   },
 ];
 
-const PORTFOLIO: PortfolioItem[] = [
-  { 
-    id: 'p1', 
-    tag: 'Produção', 
-    name: 'Captações e Audiovisual de Elite', 
-    color: 'from-[#0d1a15] to-[#0a141a]', 
-    url: 'https://drive.google.com/drive/folders/1ohZQwYtGaAGnEnRN4CYlW-7LbUEwgCmI',
-    image: 'https://lh3.googleusercontent.com/d/1edoio81qfer1exVSmf6pc4cylWbtZidD'
-  },
-];
+const PORTFOLIO: PortfolioItem[] = [];
 
 interface MediaItem {
   id: string;
@@ -191,6 +184,42 @@ const DIFFERENTIALS: Differential[] = [
 ];
 
 // --- Components ---
+
+const VideoItem = ({ src, title }: { src: string; title?: string }) => {
+  const [isMuted, setIsMuted] = useState(true);
+
+  return (
+    <div 
+      className="w-full h-full relative cursor-pointer group" 
+      onClick={() => setIsMuted(!isMuted)}
+    >
+      <iframe 
+        src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=${isMuted ? 1 : 0}&playsinline=1`}
+        className="w-full h-full pointer-events-none"
+        title={title}
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+      />
+      
+      {/* Indicador de Som */}
+      <div className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 shadow-lg">
+        {isMuted ? (
+          <VolumeX className="w-5 h-5 opacity-80" />
+        ) : (
+          <Volume2 className="w-5 h-5 text-accent animate-pulse" />
+        )}
+      </div>
+
+      {/* Camada de Toque */}
+      <div className="absolute inset-0 z-10" />
+      
+      {/* Label Informativa em Hover */}
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-black/70 backdrop-blur-md text-[0.65rem] font-ui font-bold uppercase tracking-[0.15em] text-white opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 whitespace-nowrap pointer-events-none border border-white/5 shadow-2xl">
+        Toque para {isMuted ? 'OUVIR' : 'MUTAR'}
+      </div>
+    </div>
+  );
+};
 
 const SectionTag = ({ children }: { children: React.ReactNode }) => (
   <div className="inline-flex items-center gap-2.5 font-ui text-[0.72rem] font-bold tracking-[0.14em] uppercase text-accent mb-5">
@@ -262,17 +291,7 @@ const MediaCarousel = ({ title, items, tag }: { title: string; items: MediaItem[
             className={`flex-shrink-0 snap-start bg-surface border border-border rounded-2xl overflow-hidden relative group ${item.type === 'video' ? 'w-[240px] sm:w-[280px] aspect-[9/16]' : 'w-[280px] sm:w-[320px] aspect-[3/4]'}`}
           >
             {item.type === 'video' ? (
-              <div className="w-full h-full relative">
-                <iframe 
-                  src={`https://www.youtube.com/embed/${item.src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${item.src}&autoplay=1&mute=1&playsinline=1`}
-                  className="w-full h-full pointer-events-none"
-                  title={item.title}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                />
-                {/* Transparent overlay to block interaction as requested */}
-                <div className="absolute inset-0 z-10 cursor-default" />
-              </div>
+              <VideoItem src={item.src} title={item.title} />
             ) : (
               <img 
                 src={`https://lh3.googleusercontent.com/d/${item.src}`}
@@ -378,10 +397,10 @@ export default function App() {
 
       {/* WhatsApp Float */}
       <a 
-        href="https://wa.me/5500000000000" 
+        href="https://wa.me/message/H5XKOK7MZG6UO" 
         target="_blank" 
         rel="noreferrer"
-        className="fixed bottom-7 right-7 z-[400] w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] transition-all hover:scale-110 hover:shadow-[0_12px_40px_rgba(37,211,102,0.55)] group"
+        className="fixed bottom-7 right-7 z-[400] w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] transition-all hover:scale-110 hover:shadow-[0_12px_40px_rgba(37,211,102,0.55)] group animate-pulse"
       >
         <span className="absolute right-[68px] bg-surface border border-border px-3.5 py-2 rounded-xl font-ui text-[0.78rem] font-semibold whitespace-nowrap opacity-0 translate-x-2 pointer-events-none transition-all group-hover:opacity-100 group-hover:translate-x-0 shadow-xl">
           Falar no WhatsApp
@@ -436,7 +455,7 @@ export default function App() {
           <img 
             src="https://lh3.googleusercontent.com/d/1JT7Pc-SJOYcHQyNMtxyg7t17m4OX7DAt" 
             alt="For You Agency" 
-            className="h-10 w-auto md:h-12 object-contain"
+            className="h-14 w-auto md:h-20 object-contain"
             referrerPolicy="no-referrer"
           />
         </a>
@@ -462,13 +481,16 @@ export default function App() {
           ))}
           <li>
             <a 
-              href="https://wa.me/5500000000000" 
+              href="https://wa.me/message/H5XKOK7MZG6UO" 
               target="_blank" 
               rel="noreferrer"
-              className="bg-accent text-bg px-5.5 py-2.5 rounded-full font-bold text-[0.82rem] hover:bg-white hover:shadow-[0_0_30px_rgba(125,249,194,0.4)] hover:-translate-y-0.5 transition-all"
+              className="bg-accent text-bg px-5.5 py-2.5 rounded-full font-bold text-[0.82rem] hover:bg-white hover:shadow-[0_0_30px_rgba(125,249,194,0.4)] hover:-translate-y-0.5 transition-all flex items-center gap-2 animate-pulse"
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
             >
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
+              </svg>
               Solicitar Orçamento
             </a>
           </li>
@@ -503,7 +525,7 @@ export default function App() {
                 {item.name}
               </a>
             ))}
-            <a href="https://wa.me/5500000000000" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-8">
+            <a href="https://wa.me/message/H5XKOK7MZG6UO" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-8 animate-pulse">
               Solicitar Orçamento ↗
             </a>
           </motion.div>
@@ -530,10 +552,9 @@ export default function App() {
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent font-ui text-[0.75rem] font-semibold tracking-widest uppercase px-4.5 py-2 rounded-full mb-9"
+            className="mb-9 h-10"
           >
-            <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-            Agência de Marketing Digital
+            {/* Espaçador para manter o layout */}
           </motion.div>
 
           <motion.h1 
@@ -581,10 +602,10 @@ export default function App() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4"
           >
             <a 
-              href="https://wa.me/5500000000000" 
+              href="https://wa.me/message/H5XKOK7MZG6UO" 
               target="_blank" 
               rel="noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-accent text-bg font-ui font-bold text-[1rem] tracking-tight px-10 py-5 rounded-full hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(125,249,194,0.3)] transition-all active:scale-95"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-accent text-bg font-ui font-bold text-[1rem] tracking-tight px-10 py-5 rounded-full hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(125,249,194,0.3)] transition-all active:scale-95 animate-pulse"
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
             >
@@ -790,33 +811,15 @@ export default function App() {
                 onMouseLeave={() => setIsHovering(false)}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${item.color} transition-transform duration-700 group-hover:scale-[1.06]`}>
-                  {item.image ? (
+                  {item.image && (
                     <img 
                       src={item.image} 
                       alt={item.name} 
                       className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity"
                       referrerPolicy="no-referrer"
                     />
-                  ) : (
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[length:40px_40px]" />
                   )}
                 </div>
-                
-                {!item.image && (
-                  <div className="absolute bottom-5 right-5 left-5 h-[65%] bg-white/5 border border-white/10 rounded-xl flex flex-col overflow-hidden">
-                    <div className="h-7 bg-white/5 border-b border-white/10 flex items-center px-3 gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-[#ff5f57]" />
-                      <div className="w-2 h-2 rounded-full bg-[#febc2e]" />
-                      <div className="w-2 h-2 rounded-full bg-[#28c840]" />
-                    </div>
-                    <div className="flex-1 p-3 flex flex-col gap-2">
-                      <div className="h-2 rounded-full bg-accent/15 w-3/5" />
-                      <div className="h-2 rounded-full bg-white/5 w-4/5" />
-                      <div className="h-2 rounded-full bg-white/5 w-3/5" />
-                      <div className="flex-1 rounded-md bg-white/5 border border-white/5 mt-1" />
-                    </div>
-                  </div>
-                )}
 
                 <div className="absolute inset-0 bg-bg/80 flex flex-col items-center justify-center gap-4 text-center p-6 opacity-0 group-hover:opacity-100 transition-opacity">
                   <span className="font-ui text-[0.7rem] font-semibold tracking-widest uppercase text-accent bg-accent/10 border border-accent/20 px-3.5 py-1 rounded-full">{item.tag}</span>
@@ -964,10 +967,10 @@ export default function App() {
             </p>
 
             <a 
-              href="https://wa.me/5500000000000?text=Ol%C3%A1!%20Quero%20um%20or%C3%A7amento%20para%20meu%20projeto." 
+              href="https://wa.me/message/H5XKOK7MZG6UO" 
               target="_blank" 
               rel="noreferrer"
-              className="inline-flex items-center gap-3 bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white font-ui font-bold text-[1rem] px-9 py-4.5 rounded-full hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(37,211,102,0.3)] transition-all relative z-10"
+              className="inline-flex items-center gap-3 bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white font-ui font-bold text-[1rem] px-9 py-4.5 rounded-full hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(37,211,102,0.3)] transition-all relative z-10 animate-pulse"
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
             >
@@ -987,8 +990,8 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-bg2 border-t border-border pt-15 px-[5%] pb-10">
         <div className="max-w-[1200px] mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 mb-15">
-            <div>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 mb-15">
+            <div className="col-span-2 lg:col-span-1">
               <img 
                 src="https://lh3.googleusercontent.com/d/1JT7Pc-SJOYcHQyNMtxyg7t17m4OX7DAt" 
                 alt="For You Agency" 
@@ -998,14 +1001,16 @@ export default function App() {
               <p className="text-muted text-[0.875rem] leading-[1.65] max-w-[280px] font-light">Transformamos marcas em máquinas de resultados com design, tecnologia e estratégia de marketing digital.</p>
               <div className="flex gap-4 mt-8 flex-wrap">
                 {[
-                  { icon: <Instagram className="w-5 h-5" />, label: 'IG' },
-                  { icon: <Linkedin className="w-5 h-5" />, label: 'LI' },
-                  { icon: <Facebook className="w-5 h-5" />, label: 'FB' },
-                  { icon: <Youtube className="w-5 h-5" />, label: 'YT' },
+                  { icon: <Instagram className="w-5 h-5" />, label: 'IG', href: 'https://www.instagram.com/for.youagency_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' },
+                  { icon: <Linkedin className="w-5 h-5" />, label: 'LI', href: '#' },
+                  { icon: <Facebook className="w-5 h-5" />, label: 'FB', href: '#' },
+                  { icon: <Youtube className="w-5 h-5" />, label: 'YT', href: '#' },
                 ].map((social, i) => (
                   <a 
                     key={i} 
-                    href="#" 
+                    href={social.href} 
+                    target="_blank"
+                    rel="noreferrer"
                     className="w-11 h-11 rounded-xl border border-border bg-surface flex items-center justify-center text-muted hover:border-accent hover:text-accent hover:bg-accent/5 transition-all active:scale-90"
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
@@ -1034,20 +1039,20 @@ export default function App() {
               </div>
             </div>
 
-            <div>
+            <div className="col-span-2 lg:col-span-1">
               <div className="font-ui font-bold text-[0.8rem] tracking-widest uppercase text-white mb-5">Contato</div>
               <div className="flex flex-col gap-2.5">
-                <a href="https://wa.me/5500000000000" className="text-muted text-[0.875rem] hover:text-white transition-colors">WhatsApp</a>
+                <a href="https://wa.me/message/H5XKOK7MZG6UO" target="_blank" rel="noreferrer" className="text-muted text-[0.875rem] hover:text-white transition-colors">WhatsApp</a>
                 <a href="mailto:contato@foryouagency.com" className="text-muted text-[0.875rem] hover:text-white transition-colors">E-mail</a>
-                <a href="#" className="text-muted text-[0.875rem] hover:text-white transition-colors">Instagram</a>
+                <a href="https://www.instagram.com/for.youagency_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noreferrer" className="text-muted text-[0.875rem] hover:text-white transition-colors">Instagram</a>
                 <a href="#" className="text-muted text-[0.875rem] hover:text-white transition-colors">LinkedIn</a>
               </div>
               <div className="mt-6">
                 <a 
-                  href="https://wa.me/5500000000000" 
+                  href="https://wa.me/message/H5XKOK7MZG6UO" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/25 text-[#25D366] font-ui text-[0.78rem] font-bold px-4.5 py-2.5 rounded-full hover:bg-[#25D366]/20 transition-all"
+                  className="inline-flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/25 text-[#25D366] font-ui text-[0.78rem] font-bold px-4.5 py-2.5 rounded-full hover:bg-[#25D366]/20 transition-all animate-pulse"
                   onMouseEnter={() => setIsHovering(true)}
                   onMouseLeave={() => setIsHovering(false)}
                 >
