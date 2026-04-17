@@ -417,7 +417,7 @@ export default function App() {
 
       {/* WhatsApp Float */}
       <a 
-        href="https://wa.me/message/H5XKOK7MZG6UO" 
+        href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
         target="_blank" 
         rel="noreferrer"
         className="fixed bottom-7 right-7 z-[400] w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] transition-all hover:scale-110 hover:shadow-[0_12px_40px_rgba(37,211,102,0.55)] group animate-pulse"
@@ -501,7 +501,7 @@ export default function App() {
           ))}
           <li>
             <a 
-              href="https://wa.me/message/H5XKOK7MZG6UO" 
+              href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
               target="_blank" 
               rel="noreferrer"
               className="bg-accent text-bg px-5.5 py-2.5 rounded-full font-bold text-[0.82rem] hover:bg-white hover:shadow-[0_0_30px_rgba(125,249,194,0.4)] hover:-translate-y-0.5 transition-all flex items-center gap-2 animate-pulse"
@@ -545,7 +545,7 @@ export default function App() {
                 {item.name}
               </a>
             ))}
-            <a href="https://wa.me/message/H5XKOK7MZG6UO" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-8 animate-pulse">
+            <a href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." target="_blank" rel="noreferrer" className="text-accent underline underline-offset-8 animate-pulse">
               Solicitar Orçamento ↗
             </a>
           </motion.div>
@@ -622,7 +622,7 @@ export default function App() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4"
           >
             <a 
-              href="https://wa.me/message/H5XKOK7MZG6UO" 
+              href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
               target="_blank" 
               rel="noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-accent text-bg font-ui font-bold text-[1rem] tracking-tight px-10 py-5 rounded-full hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(125,249,194,0.3)] transition-all active:scale-95 animate-pulse"
@@ -987,7 +987,7 @@ export default function App() {
             </p>
 
             <a 
-              href="https://wa.me/message/H5XKOK7MZG6UO" 
+              href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
               target="_blank" 
               rel="noreferrer"
               className="inline-flex items-center gap-3 bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white font-ui font-bold text-[1rem] px-9 py-4.5 rounded-full hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(37,211,102,0.3)] transition-all relative z-10 animate-pulse"
@@ -1062,14 +1062,14 @@ export default function App() {
             <div className="col-span-2 lg:col-span-1">
               <div className="font-ui font-bold text-[0.8rem] tracking-widest uppercase text-white mb-5">Contato</div>
               <div className="flex flex-col gap-2.5">
-                <a href="https://wa.me/message/H5XKOK7MZG6UO" target="_blank" rel="noreferrer" className="text-muted text-[0.875rem] hover:text-white transition-colors">WhatsApp</a>
+                <a href="https://wa.me/5522988356209?text=Olá! Gostaria de falar com um consultor." target="_blank" rel="noreferrer" className="text-muted text-[0.875rem] hover:text-white transition-colors">WhatsApp</a>
                 <a href="mailto:contato@foryouagency.com" className="text-muted text-[0.875rem] hover:text-white transition-colors">E-mail</a>
                 <a href="https://www.instagram.com/for.youagency_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noreferrer" className="text-muted text-[0.875rem] hover:text-white transition-colors">Instagram</a>
                 <a href="#" className="text-muted text-[0.875rem] hover:text-white transition-colors">LinkedIn</a>
               </div>
               <div className="mt-6">
                 <a 
-                  href="https://wa.me/message/H5XKOK7MZG6UO" 
+                  href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de falar com vocês." 
                   target="_blank" 
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/25 text-[#25D366] font-ui text-[0.78rem] font-bold px-4.5 py-2.5 rounded-full hover:bg-[#25D366]/20 transition-all animate-pulse"
