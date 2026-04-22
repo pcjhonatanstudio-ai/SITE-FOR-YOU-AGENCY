@@ -670,6 +670,30 @@ export default function App() {
         </div>
       </section>
 
+      {/* Showcase Premium Section */}
+      <section id="showcase" className="py-[clamp(60px,10vw,120px)] px-[5%]">
+        <div className="max-w-[1200px] mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <SectionTag>Premium Showcase</SectionTag>
+            <SectionTitle title="Mergulhe em nossa" em="excelência visual" />
+            <p className="text-muted text-[1.05rem] max-w-[600px] mx-auto font-light">
+              Conteúdos captados com máxima qualidade, otimizados para uma imersão completa em cada detalhe.
+            </p>
+          </motion.div>
+
+          <MediaCarousel title="Um Pouco do Nosso Trabalho" items={WORK_VIDEOS} tag="Showcase" />
+          <MediaCarousel title="Nossas Melhores Captações" items={CAPTURES_VIDEOS} tag="Produção" />
+          <MediaCarousel title="Ensaios de Noivado" items={ENGAGEMENT_PHOTOS} tag="Fotografia" />
+          <MediaCarousel title="Ensaios 15 Anos" items={FIFTEEN_PHOTOS} tag="Fotografia" />
+          <MediaCarousel title="Depoimentos e Resultados" items={TESTIMONIAL_VIDEOS} tag="Prova Social" />
+        </div>
+      </section>
+
       {/* Sobre Section */}
       <section id="sobre" className="bg-bg2 py-[clamp(60px,10vw,120px)] px-[5%]">
         <div className="max-w-[1200px] mx-auto grid md:grid-cols-2 gap-20 items-center">
@@ -738,9 +762,8 @@ export default function App() {
           </motion.div>
         </div>
       </section>
-
       {/* Serviços Section */}
-      <section id="servicos" className="pt-[clamp(60px,10vw,120px)] pb-4 px-[5%]">
+      <section id="servicos" className="pt-[clamp(60px,10vw,120px)] pb-2.5 px-[5%]">
         <div className="max-w-[1200px] mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <motion.div 
@@ -792,7 +815,7 @@ export default function App() {
       </section>
 
       {/* Portfólio Section */}
-      <section id="portfolio" className="bg-bg2 py-4 px-[5%]">
+      <section id="portfolio" className="bg-bg2 py-2.5 px-[5%]">
         <div className="max-w-[1200px] mx-auto">
           <div className="grid grid-cols-12 gap-5">
             {PORTFOLIO.map((item, i) => (
@@ -838,30 +861,6 @@ export default function App() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Showcase Premium Section */}
-      <section id="showcase" className="pt-4 pb-[clamp(60px,10vw,120px)] px-[5%]">
-        <div className="max-w-[1200px] mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-20"
-          >
-            <SectionTag>Premium Showcase</SectionTag>
-            <SectionTitle title="Mergulhe em nossa" em="excelência visual" />
-            <p className="text-muted text-[1.05rem] max-w-[600px] mx-auto font-light">
-              Conteúdos captados com máxima qualidade, otimizados para uma imersão completa em cada detalhe.
-            </p>
-          </motion.div>
-
-          <MediaCarousel title="Um Pouco do Nosso Trabalho" items={WORK_VIDEOS} tag="Showcase" />
-          <MediaCarousel title="Nossas Melhores Captações" items={CAPTURES_VIDEOS} tag="Produção" />
-          <MediaCarousel title="Ensaios de Noivado" items={ENGAGEMENT_PHOTOS} tag="Fotografia" />
-          <MediaCarousel title="Ensaios 15 Anos" items={FIFTEEN_PHOTOS} tag="Fotografia" />
-          <MediaCarousel title="Depoimentos e Resultados" items={TESTIMONIAL_VIDEOS} tag="Prova Social" />
         </div>
       </section>
 
