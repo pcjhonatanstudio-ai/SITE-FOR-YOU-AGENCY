@@ -241,9 +241,9 @@ const VideoItem = ({ src, title }: { src: string; title?: string }) => {
   );
 };
 
-const SectionTag = ({ children }: { children: React.ReactNode }) => (
-  <div className="inline-flex items-center gap-2.5 font-ui text-[0.72rem] font-bold tracking-[0.14em] uppercase text-accent mb-5">
-    <div className="w-6 h-[1.5px] bg-accent" />
+const SectionTag = ({ children, size = 'default' }: { children: React.ReactNode, size?: 'default' | 'large' }) => (
+  <div className={`inline-flex items-center gap-2.5 font-ui font-bold tracking-[0.14em] uppercase text-accent mb-5 ${size === 'large' ? 'text-[0.9rem]' : 'text-[0.72rem]'}`}>
+    <div className={`bg-accent ${size === 'large' ? 'w-8 h-[2px]' : 'w-6 h-[1.5px]'}`} />
     {children}
   </div>
 );
@@ -279,7 +279,7 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
     <div className="mb-20 last:mb-0">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <SectionTag>{tag}</SectionTag>
+          <SectionTag size={tag === 'Showcase' ? 'large' : 'default'}>{tag}</SectionTag>
           {title && <h3 className="font-display text-2xl sm:text-3xl tracking-tight">{title}</h3>}
         </div>
         <div className="flex gap-2">
