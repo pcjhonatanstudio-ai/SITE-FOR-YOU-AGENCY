@@ -254,7 +254,7 @@ const SectionTitle = ({ title, em }: { title: string; em?: string }) => (
   </h2>
 );
 
-const MediaCarousel = ({ title, items, tag }: { title: string; items: MediaItem[]; tag: string }) => {
+const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem[]; tag: string }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -280,7 +280,7 @@ const MediaCarousel = ({ title, items, tag }: { title: string; items: MediaItem[
       <div className="flex justify-between items-end mb-8">
         <div>
           <SectionTag>{tag}</SectionTag>
-          <h3 className="font-display text-2xl sm:text-3xl tracking-tight">{title}</h3>
+          {title && <h3 className="font-display text-2xl sm:text-3xl tracking-tight">{title}</h3>}
         </div>
         <div className="flex gap-2">
           <button 
@@ -583,8 +583,8 @@ export default function App() {
             transition={{ delay: 0.15 }}
             className="font-display text-[clamp(2.5rem,7vw,5.5rem)] font-light leading-[1.08] tracking-tight mb-7"
           >
-            Líder em Tecnologia: <br />
-            <strong className="font-semibold italic bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent">Vendas Automáticas<br />para Médicos e Clínicas</strong>
+            Transforme Seguidores em <br />
+            <strong className="font-semibold italic bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent">Autoridade e Lucro</strong>
           </motion.h1>
 
           <motion.p 
@@ -593,27 +593,9 @@ export default function App() {
             transition={{ delay: 0.3 }}
             className="text-[clamp(1rem,2vw,1.15rem)] text-muted max-w-[750px] mx-auto mb-10 font-light"
           >
-            Investimos em tecnologia de ponta para criar o ecossistema definitivo. Nosso sistema recebe, categoriza, responde com IA e entrega o paciente agendado de forma 100% automatizada. A melhor estratégia do mercado para converter anúncios em lucro real.
+            Sua marca não precisa apenas aparecer; ela precisa liderar o mercado. Posicionamento estratégico e engajamento que transformam audiência em uma potência digital.
           </motion.p>
 
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 max-w-[800px] mx-auto"
-          >
-            {[
-              { label: 'Recebe o Lead', desc: 'Anúncios 24/7' },
-              { label: 'Categoriza', desc: 'Filtro Inteligente' },
-              { label: 'IA Responde', desc: 'Conversa Humana' },
-              { label: 'Agenda Consulta', desc: 'Paciente Pronto' },
-            ].map((step, i) => (
-              <div key={i} className="bg-surface/50 border border-white/5 p-4 rounded-2xl backdrop-blur-sm">
-                <div className="text-accent font-ui font-bold text-[0.8rem] mb-1 uppercase tracking-tighter">{step.label}</div>
-                <div className="text-white/60 text-[0.7rem] font-medium">{step.desc}</div>
-              </div>
-            ))}
-          </motion.div>
 
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -686,11 +668,24 @@ export default function App() {
             </p>
           </motion.div>
 
-          <MediaCarousel title="Um Pouco do Nosso Trabalho" items={WORK_VIDEOS} tag="Showcase" />
+          <MediaCarousel items={WORK_VIDEOS} tag="Showcase" />
           <MediaCarousel title="Nossas Melhores Captações" items={CAPTURES_VIDEOS} tag="Produção" />
           <MediaCarousel title="Ensaios de Noivado" items={ENGAGEMENT_PHOTOS} tag="Fotografia" />
           <MediaCarousel title="Ensaios 15 Anos" items={FIFTEEN_PHOTOS} tag="Fotografia" />
           <MediaCarousel title="Depoimentos e Resultados" items={TESTIMONIAL_VIDEOS} tag="Prova Social" />
+        </div>
+      </section>
+
+      {/* Tecnologia Section */}
+      <section className="py-[clamp(60px,10vw,120px)] px-[5%] border-b border-border">
+        <div className="max-w-[900px] mx-auto text-center">
+          <h2 className="font-display text-[clamp(2.5rem,7vw,5.5rem)] font-light leading-[1.08] tracking-tight mb-7">
+            Líder em Tecnologia: <br />
+            <strong className="font-semibold italic bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent">Vendas Automáticas<br />para Médicos e Clínicas</strong>
+          </h2>
+          <p className="text-[clamp(1rem,2vw,1.15rem)] text-muted max-w-[750px] mx-auto font-light">
+            Investimos em tecnologia de ponta para criar o ecossistema definitivo. Nosso sistema recebe, categoriza, responde com IA e entrega o paciente agendado de forma 100% automatizada. A melhor estratégia do mercado para converter anúncios em lucro real.
+          </p>
         </div>
       </section>
 
