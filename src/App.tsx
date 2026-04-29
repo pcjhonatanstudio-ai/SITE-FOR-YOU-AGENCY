@@ -215,7 +215,7 @@ const VideoItem = ({ src, title }: { src: string; title?: string }) => {
       <iframe 
         ref={iframeRef}
         src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=1&playsinline=1&enablejsapi=1&iv_load_policy=3&showinfo=0&disablekb=1&fs=0`}
-        className="w-[110%] h-[110%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none object-cover"
+        className="w-[120%] h-[120%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none object-cover"
         title={title}
         allow="autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
