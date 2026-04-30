@@ -136,6 +136,10 @@ const WORK_VIDEOS: MediaItem[] = [
   { id: 'wv3', type: 'video', src: 'ViccFmQvDJM', title: 'Trabalho 3' },
   { id: 'wv4', type: 'video', src: 'P7X2SdM8wnw', title: 'Trabalho 4' },
   { id: 'wv5', type: 'video', src: 'Hq_NDDBamcE', title: 'Trabalho 5' },
+  { id: 'wv6', type: 'video', src: 'O60DyAO9WoM', title: 'Trabalho 6' },
+  { id: 'wv7', type: 'video', src: '58A_8mNjqrY', title: 'Trabalho 7' },
+  { id: 'wv8', type: 'video', src: 'tztZaHCqfSs', title: 'Trabalho 8' },
+  { id: 'wv9', type: 'video', src: 'olA_fyfziLk', title: 'Trabalho 9' },
 ];
 
 const CAPTURES_VIDEOS: MediaItem[] = [
