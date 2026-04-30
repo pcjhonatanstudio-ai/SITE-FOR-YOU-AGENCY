@@ -235,7 +235,7 @@ const VideoItem = ({ src, title }: { src: string; title?: string }) => {
       </div>
 
       {/* Camada de Toque */}
-      <div className="absolute inset-0 z-10" />
+      <div className="absolute inset-0 z-30" />
       
       {/* Label Informativa em Hover */}
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-xl bg-black/70 backdrop-blur-md text-[0.65rem] font-ui font-bold uppercase tracking-[0.15em] text-white opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 whitespace-nowrap pointer-events-none border border-white/5 shadow-2xl">
@@ -262,6 +262,10 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  
+  const isDown = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
 
   const checkScroll = () => {
     if (scrollRef.current) {
@@ -270,6 +274,28 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
         scrollRef.current.scrollLeft < scrollRef.current.scrollWidth - scrollRef.current.clientWidth - 10
       );
     }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDown.current = true;
+    startX.current = e.pageX - (scrollRef.current as HTMLElement).offsetLeft;
+    scrollLeft.current = (scrollRef.current as HTMLElement).scrollLeft;
+  };
+  
+  const handleMouseLeave = () => {
+    isDown.current = false;
+  };
+  
+  const handleMouseUp = () => {
+    isDown.current = false;
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDown.current) return;
+    e.preventDefault();
+    const x = e.pageX - (scrollRef.current as HTMLElement).offsetLeft;
+    const walk = (x - startX.current) * 2; // scroll-fast
+    (scrollRef.current as HTMLElement).scrollLeft = scrollLeft.current - walk;
   };
 
   const scroll = (dir: 'left' | 'right') => {
@@ -307,7 +333,11 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
       <div 
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-[5%] sm:px-0 touch-pan-x"
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-[5%] sm:px-0 touch-pan-x cursor-grab active:cursor-grabbing"
       >
         {items.map((item) => (
           <div 
