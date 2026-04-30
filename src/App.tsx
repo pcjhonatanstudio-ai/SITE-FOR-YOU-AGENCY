@@ -533,7 +533,7 @@ export default function App() {
             initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
             animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
             exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            className="fixed inset-0 z-[490] bg-bg/95 flex flex-col items-center justify-center gap-10 font-ui text-2xl font-bold uppercase tracking-widest"
+            className="fixed inset-0 z-[490] bg-bg/95 flex flex-col items-center justify-center gap-8 font-ui text-xl sm:text-2xl font-bold uppercase tracking-widest p-10 text-center"
           >
             {[
               { name: 'Início', href: '#hero' },
@@ -545,8 +545,14 @@ export default function App() {
                 {item.name}
               </a>
             ))}
-            <a href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." target="_blank" rel="noreferrer" className="text-accent underline underline-offset-8 animate-pulse">
-              Solicitar Orçamento ↗
+            <a 
+              href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
+              target="_blank" 
+              rel="noreferrer" 
+              className="bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center gap-3 px-6 py-4 rounded-full text-white font-bold shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105 text-lg sm:text-xl"
+            >
+              <MessageCircle className="w-6 h-6" />
+              Solicitar Orçamento
             </a>
           </motion.div>
         )}
@@ -581,10 +587,24 @@ export default function App() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="font-display text-[clamp(2.5rem,7vw,5.5rem)] font-light leading-[1.08] tracking-tight mb-7"
+            className="relative font-display text-[clamp(2.5rem,7vw,5.5rem)] font-light leading-[1.08] tracking-tight mb-7"
           >
+
             Transforme Seguidores em <br />
-            <strong className="font-semibold italic bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent">Autoridade e Lucro</strong>
+            <motion.strong 
+              className="relative font-semibold italic inline-block bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent"
+              animate={{ 
+                scale: [1, 1.05, 1],
+                filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"],
+              }}
+              transition={{ 
+                duration: 2, 
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              Autoridade e Lucro
+            </motion.strong>
           </motion.h1>
 
           <motion.p 
@@ -669,7 +689,7 @@ export default function App() {
           </motion.div>
 
           <MediaCarousel items={WORK_VIDEOS} tag="Showcase" />
-          <MediaCarousel title="Nossas Melhores Captações" items={CAPTURES_VIDEOS} tag="Produção" />
+          <MediaCarousel title="Por Trás das Câmeras" items={CAPTURES_VIDEOS} tag="Produção" />
           <MediaCarousel title="Ensaios de Noivado" items={ENGAGEMENT_PHOTOS} tag="Fotografia" />
           <MediaCarousel title="Ensaios 15 Anos" items={FIFTEEN_PHOTOS} tag="Fotografia" />
           <MediaCarousel title="Depoimentos e Resultados" items={TESTIMONIAL_VIDEOS} tag="Prova Social" />
