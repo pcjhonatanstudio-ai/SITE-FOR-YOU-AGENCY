@@ -191,22 +191,23 @@ const DIFFERENTIALS: Differential[] = [
 
 const TypingEffect = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
-  const [isTyping, setIsTyping] = useState(true);
 
   useEffect(() => {
     let index = 0;
-    const interval = setInterval(() => {
-      setDisplayedText((prev) => prev + text.charAt(index));
+    setDisplayedText(""); 
+    
+    const timer = setInterval(() => {
       index++;
-      if (index === text.length) {
-        setIsTyping(false);
-        clearInterval(interval);
+      setDisplayedText(text.substring(0, index));
+      if (index >= text.length) {
+        clearInterval(timer);
       }
-    }, 70);
-    return () => clearInterval(interval);
+    }, 100);
+    
+    return () => clearInterval(timer);
   }, [text]);
 
-  return <>{displayedText}{isTyping && <span className="animate-pulse">|</span>}</>;
+  return <>{displayedText}<span className="animate-pulse">|</span></>;
 };
 
 const TextToType = "Sua marca não precisa apenas aparecer, precisa liderar o mercado. Posicionamento estratégico e engajamento que transformam audiência em uma potência digital.";
@@ -240,7 +241,7 @@ const VideoItem = ({ src, title }: { src: string; title?: string }) => {
     >
       <iframe 
         ref={iframeRef}
-        src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=1&playsinline=1&enablejsapi=1&iv_load_policy=3&showinfo=0&disablekb=1&fs=0`}
+        src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=1&playsinline=1&enablejsapi=1&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&autohide=1`}
         className="w-[120%] h-[120%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none object-cover"
         title={title}
         allow="autoplay; encrypted-media; picture-in-picture"
