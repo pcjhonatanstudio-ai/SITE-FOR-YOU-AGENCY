@@ -307,7 +307,7 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
       <div 
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-[5%] sm:px-0"
+        className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-[5%] sm:px-0 touch-pan-x"
       >
         {items.map((item) => (
           <div 
