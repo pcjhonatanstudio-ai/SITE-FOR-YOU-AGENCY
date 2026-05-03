@@ -762,21 +762,9 @@ export default function App() {
         </div>
       </section>
 
-      {/* Tecnologia Section */}
-      <section className="py-[clamp(60px,10vw,120px)] px-[5%] border-b border-border">
-        <div className="max-w-[900px] mx-auto text-center">
-          <h2 className="font-display text-[clamp(2.5rem,7vw,5.5rem)] font-light leading-[1.08] tracking-tight mb-7">
-            Transforme Conversas em Vendas com um CRM Inteligente + Robô de WhatsApp Humanizado
-          </h2>
-          <p className="text-[clamp(1rem,2vw,1.15rem)] text-muted max-w-[750px] mx-auto font-light">
-            Automatize seu atendimento, aumente suas conversões e transforme leads em lucro real — todos os dias, 24 horas por dia.
-          </p>
-        </div>
-      </section>
-
       {/* Sobre Section */}
       <section id="sobre" className="bg-bg2 py-[clamp(60px,10vw,120px)] px-[5%]">
-        <div className="max-w-[1200px] mx-auto grid md:grid-cols-2 gap-20 items-center">
+        <div className="max-w-[800px] mx-auto flex flex-col gap-12">
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -785,9 +773,9 @@ export default function App() {
           >
             {/* Glass effect container */}
             <img 
-              src="https://drive.google.com/uc?id=1kSUBIeCRM5lApYcVjM7VY0zt60zmPDaW"
+              src="https://i.ibb.co/G3Q1cs7s/Chat-GPT-Image-3-de-mai-de-2026-12-44-15.png"
               alt="CRM Inteligente"
-              className="absolute inset-0 w-full h-full object-cover z-10 rounded-[24px] backdrop-blur-md"
+              className="absolute inset-0 w-full h-full object-contain z-10 rounded-[24px]"
             />
             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(125,249,194,0.06)_0%,transparent_50%),radial-gradient(circle_at_30%_80%,rgba(91,229,255,0.08),transparent_60%)]" />
           </motion.div>
@@ -801,7 +789,7 @@ export default function App() {
             <h3 className="font-display text-3xl mb-6 flex items-center gap-3"><Rocket className="text-accent" /> Transforme Conversas em Vendas com um CRM Inteligente + Robô de WhatsApp Humanizado</h3>
             <p className="text-gray-400 mb-6">Automatize seu atendimento, aumente suas conversões e transforme leads em lucro real — todos os dias, 24 horas por dia.</p>
             
-            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><Bot className="text-accent" /> Atendimento Inteligente e Humanizado</h4>
+
             <p className="text-gray-400 mb-4">Esqueça respostas robóticas e frias. Nosso robô utiliza Inteligência Artificial para criar conversas naturais, envolventes e estratégicas, simulando um atendimento humano real. Ele entende o momento do lead, responde com contexto e conduz a conversa com foco total na conversão.</p>
 
             <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><TrendingUp className="text-accent" /> Gestão Completa de Leads</h4>
