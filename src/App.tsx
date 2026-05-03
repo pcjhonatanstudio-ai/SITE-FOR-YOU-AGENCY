@@ -29,7 +29,8 @@ import {
   DollarSign,
   Activity,
   Volume2,
-  VolumeX
+  VolumeX,
+  Rocket
 } from 'lucide-react';
 
 // --- Types ---
@@ -187,7 +188,6 @@ const DIFFERENTIALS: Differential[] = [
   { id: 'd8', title: 'Análise de Métricas', text: 'Relatórios claros e objetivos. Você sempre sabe o que está acontecendo com seu investimento.', icon: <BarChart3 className="w-5 h-5" /> },
 ];
 
-// --- Components ---
 
 const TypingEffect = ({ text }: { text: string }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -606,7 +606,7 @@ export default function App() {
               href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
               target="_blank" 
               rel="noreferrer" 
-              className="bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center gap-3 px-6 py-4 rounded-full text-white font-bold shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105 text-lg sm:text-xl"
+              className="bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center gap-3 px-6 py-4 rounded-full text-white font-bold shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105 text-lg sm:text-xl"
             >
               <MessageCircle className="w-6 h-6" />
               Solicitar Orçamento
@@ -647,9 +647,9 @@ export default function App() {
             className="relative font-display text-[clamp(2.5rem,7vw,5.5rem)] font-light leading-[1.08] tracking-tight mb-7"
           >
 
-            Transforme Seguidores em <br />
+            Transforme Seguidores em{' '}
             <motion.strong 
-              className="relative font-semibold italic inline-block bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent"
+              className="relative font-semibold italic inline-block bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent px-2"
               animate={{ 
                 scale: [1, 1.05, 1],
                 filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"],
@@ -660,8 +660,9 @@ export default function App() {
                 ease: "easeInOut"
               }}
             >
-              Autoridade e Lucro
+              Lucro
             </motion.strong>
+
           </motion.h1>
 
           <motion.p 
