@@ -30,7 +30,15 @@ import {
   Activity,
   Volume2,
   VolumeX,
-  Rocket
+  Rocket,
+  Bot,
+  Calendar,
+  RotateCcw,
+  Megaphone,
+  TrendingUp,
+  CheckCircle,
+  Flame,
+  ArrowRight
 } from 'lucide-react';
 
 // --- Types ---
@@ -758,11 +766,10 @@ export default function App() {
       <section className="py-[clamp(60px,10vw,120px)] px-[5%] border-b border-border">
         <div className="max-w-[900px] mx-auto text-center">
           <h2 className="font-display text-[clamp(2.5rem,7vw,5.5rem)] font-light leading-[1.08] tracking-tight mb-7">
-            Líder em Tecnologia: <br />
-            <strong className="font-semibold italic bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent">Vendas Automáticas<br />para Médicos e Clínicas</strong>
+            Transforme Conversas em Vendas com um CRM Inteligente + Robô de WhatsApp Humanizado
           </h2>
           <p className="text-[clamp(1rem,2vw,1.15rem)] text-muted max-w-[750px] mx-auto font-light">
-            Investimos em tecnologia de ponta para criar o ecossistema definitivo. Nosso sistema recebe, categoriza, responde com IA e entrega o paciente agendado de forma 100% automatizada. A melhor estratégia do mercado para converter anúncios em lucro real.
+            Automatize seu atendimento, aumente suas conversões e transforme leads em lucro real — todos os dias, 24 horas por dia.
           </p>
         </div>
       </section>
@@ -774,33 +781,15 @@ export default function App() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative aspect-[4/5] max-h-[560px] rounded-[24px] overflow-hidden bg-surface border border-border"
+            className="relative aspect-[4/3] max-h-[560px] rounded-[24px] overflow-hidden bg-surface border border-border flex items-center justify-center p-10"
           >
+            {/* Glass effect container */}
+            <img 
+              src="https://drive.google.com/uc?id=1kSUBIeCRM5lApYcVjM7VY0zt60zmPDaW"
+              alt="CRM Inteligente"
+              className="absolute inset-0 w-full h-full object-cover z-10 rounded-[24px] backdrop-blur-md"
+            />
             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(125,249,194,0.06)_0%,transparent_50%),radial-gradient(circle_at_30%_80%,rgba(91,229,255,0.08),transparent_60%)]" />
-            <div className="absolute top-0 left-0 right-0 h-1/2 bg-[repeating-linear-gradient(0deg,transparent,transparent_30px,rgba(255,255,255,0.03)_30px,rgba(255,255,255,0.03)_31px)]" />
-            
-            <div className="absolute top-7.5 right-7.5 w-[120px] h-[120px] border border-accent/20 rounded-full flex items-center justify-center">
-              <div className="w-20 h-20 border border-accent/10 rounded-full" />
-              <Star className="w-8 h-8 text-accent/50 absolute" strokeWidth={1.5} />
-            </div>
-
-            <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-15 w-[70%] h-auto" viewBox="0 0 200 120" fill="none">
-              <polyline points="0,100 30,80 60,60 90,40 120,55 150,20 200,10" stroke="url(#g1)" strokeWidth="2" fill="none" />
-              <defs>
-                <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#7DF9C2" />
-                  <stop offset="100%" stopColor="#5BE5FF" />
-                </linearGradient>
-              </defs>
-              <circle cx="150" cy="20" r="5" fill="rgba(125,249,194,0.8)" />
-            </svg>
-
-            <div className="absolute inset-0 flex flex-col justify-end p-9">
-              <div className="bg-accent/5 border border-accent/15 rounded-2xl p-6 backdrop-blur-md relative z-10">
-                <div className="font-display text-5xl font-semibold leading-none bg-gradient-to-br from-accent to-accent2 bg-clip-text text-transparent">+120</div>
-                <div className="text-[0.8rem] text-muted font-ui font-medium mt-1">Projetos realizados com sucesso</div>
-              </div>
-            </div>
           </motion.div>
 
           <motion.div 
@@ -809,14 +798,33 @@ export default function App() {
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
           >
-            <SectionTag>Sobre a Agência</SectionTag>
-            <SectionTitle title="Tecnologia a serviço" em="do seu crescimento" />
-            <p className="text-muted text-[1.05rem] leading-[1.75] max-w-[560px] font-light mb-4">
-              A <strong className="text-white">For You Agency</strong> nasceu da convicção de que toda empresa merece uma presença digital à altura do seu potencial. Combinamos design sofisticado, automação inteligente e estratégia de marketing para entregar resultados reais e mensuráveis.
-            </p>
-            <p className="text-muted text-[1.05rem] leading-[1.75] max-w-[560px] font-light">
-              Somos especialistas em transformar processos complexos em soluções simples, eficientes e escaláveis — do primeiro contato ao pós-venda automatizado.
-            </p>
+            <h3 className="font-display text-3xl mb-6 flex items-center gap-3"><Rocket className="text-accent" /> Transforme Conversas em Vendas com um CRM Inteligente + Robô de WhatsApp Humanizado</h3>
+            <p className="text-gray-400 mb-6">Automatize seu atendimento, aumente suas conversões e transforme leads em lucro real — todos os dias, 24 horas por dia.</p>
+            
+            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><Bot className="text-accent" /> Atendimento Inteligente e Humanizado</h4>
+            <p className="text-gray-400 mb-4">Esqueça respostas robóticas e frias. Nosso robô utiliza Inteligência Artificial para criar conversas naturais, envolventes e estratégicas, simulando um atendimento humano real. Ele entende o momento do lead, responde com contexto e conduz a conversa com foco total na conversão.</p>
+
+            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><TrendingUp className="text-accent" /> Gestão Completa de Leads</h4>
+            <p className="text-gray-400 mb-2">Todos os seus leads são organizados automaticamente:</p>
+            <ul className="pl-5 space-y-2 text-gray-400 mb-4">
+              <li className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Classificação por temperatura: Frios | Mornos | Quentes</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-accent" /> Histórico completo de interações</li>
+              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-accent" /> Identificação de oportunidades em tempo real</li>
+            </ul>
+
+            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><DollarSign className="text-accent" /> Conversão Inteligente e Automática</h4>
+            <p className="text-gray-400 mb-4">O sistema não apenas responde… ele vende. Através de fluxos estratégicos e gatilhos de persuasão, o robô conduz o lead até a tomada de decisão.</p>
+
+            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><Calendar className="text-accent" /> Agendamentos 100% Automatizados</h4>
+            <p className="text-gray-400 mb-4">Agendamento automático de reuniões, consultas e avaliações. Integração com Google Calendar e organização total da sua agenda sem esforço.</p>
+
+            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><RotateCcw className="text-accent" /> Recuperação de Leads Frios</h4>
+            <p className="text-gray-400 mb-4">Após 48 horas sem interação, o sistema ativa automaticamente estratégias de reengajamento com mensagens personalizadas e abordagens persuasivas.</p>
+
+            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><Megaphone className="text-accent" /> Disparo de Campanhas Estratégicas</h4>
+            <p className="text-gray-400 mb-4">Envie mensagens segmentadas e inteligentes: Campanhas promocionais, avisos importantes e muito mais com foco em resultado.</p>
+            
+            <p className="flex items-center gap-2 text-gray-400 font-bold mb-6"><Flame className="text-accent" /> Pronto para Automatizar e Crescer?</p>
 
             <div className="grid grid-cols-2 gap-4 mt-10">
               {[
