@@ -786,33 +786,80 @@ export default function App() {
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
           >
-            <h3 className="font-display text-3xl mb-6 flex items-center gap-3"><Rocket className="text-accent" /> Transforme Conversas em Vendas com um CRM Inteligente + Robô de WhatsApp Humanizado</h3>
-            <p className="text-gray-400 mb-6">Automatize seu atendimento, aumente suas conversões e transforme leads em lucro real — todos os dias, 24 horas por dia.</p>
-            
+            <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-4">
+                <h3 className="font-display text-2xl md:text-4xl text-white flex items-center gap-3">
+                  <Rocket className="text-accent flex-shrink-0 w-8 h-8" /> 
+                  Transforme Conversas em Vendas com um CRM Inteligente + Robô de WhatsApp Humanizado
+                </h3>
+                <p className="text-gray-400 text-base md:text-lg leading-relaxed">
+                  Automatize seu atendimento, aumente suas conversões e transforme leads em lucro real — todos os dias, 24 horas por dia.
+                </p>
+              </div>
+              
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-2">
+                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
+                    <Bot className="text-accent flex-shrink-0 w-6 h-6" /> Atendimento Inteligente e Humanizado
+                  </h4>
+                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">
+                    Esqueça respostas robóticas e frias. Nosso robô utiliza Inteligência Artificial para criar conversas naturais, envolventes e estratégicas, simulando um atendimento humano real. Ele entende o momento do lead, responde com contexto e conduz a conversa com foco total na conversão.
+                  </p>
+                </div>
 
-            <p className="text-gray-400 mb-4">Esqueça respostas robóticas e frias. Nosso robô utiliza Inteligência Artificial para criar conversas naturais, envolventes e estratégicas, simulando um atendimento humano real. Ele entende o momento do lead, responde com contexto e conduz a conversa com foco total na conversão.</p>
+                <div className="flex flex-col gap-2">
+                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
+                    <TrendingUp className="text-accent flex-shrink-0 w-6 h-6" /> Gestão Completa de Leads
+                  </h4>
+                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Todos os seus leads são organizados automaticamente:</p>
+                  <ul className="pl-5 space-y-2 text-gray-400 text-sm md:text-base">
+                    <li className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div> Classificação por temperatura: Frios | Mornos | Quentes
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" /> Histórico completo de interações
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" /> Identificação de oportunidades em tempo real
+                    </li>
+                  </ul>
+                </div>
 
-            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><TrendingUp className="text-accent" /> Gestão Completa de Leads</h4>
-            <p className="text-gray-400 mb-2">Todos os seus leads são organizados automaticamente:</p>
-            <ul className="pl-5 space-y-2 text-gray-400 mb-4">
-              <li className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Classificação por temperatura: Frios | Mornos | Quentes</li>
-              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-accent" /> Histórico completo de interações</li>
-              <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-accent" /> Identificação de oportunidades em tempo real</li>
-            </ul>
+                <div className="flex flex-col gap-2">
+                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
+                    <DollarSign className="text-accent flex-shrink-0 w-6 h-6" /> Conversão Inteligente e Automática
+                  </h4>
+                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">O sistema não apenas responde… ele vende. Através de fluxos estratégicos e gatilhos de persuasão, o robô conduz o lead até a tomada de decisão.</p>
+                </div>
 
-            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><DollarSign className="text-accent" /> Conversão Inteligente e Automática</h4>
-            <p className="text-gray-400 mb-4">O sistema não apenas responde… ele vende. Através de fluxos estratégicos e gatilhos de persuasão, o robô conduz o lead até a tomada de decisão.</p>
+                <div className="flex flex-col gap-2">
+                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
+                    <Calendar className="text-accent flex-shrink-0 w-6 h-6" /> Agendamentos 100% Automatizados
+                  </h4>
+                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Agendamento automático de reuniões, consultas e avaliações. Integração com Google Calendar e organização total da sua agenda sem esforço.</p>
+                </div>
 
-            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><Calendar className="text-accent" /> Agendamentos 100% Automatizados</h4>
-            <p className="text-gray-400 mb-4">Agendamento automático de reuniões, consultas e avaliações. Integração com Google Calendar e organização total da sua agenda sem esforço.</p>
+                <div className="flex flex-col gap-2">
+                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
+                    <RotateCcw className="text-accent flex-shrink-0 w-6 h-6" /> Recuperação de Leads Frios
+                  </h4>
+                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Após 48 horas sem interação, o sistema ativa automaticamente estratégias de reengajamento com mensagens personalizadas e abordagens persuasivas.</p>
+                </div>
 
-            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><RotateCcw className="text-accent" /> Recuperação de Leads Frios</h4>
-            <p className="text-gray-400 mb-4">Após 48 horas sem interação, o sistema ativa automaticamente estratégias de reengajamento com mensagens personalizadas e abordagens persuasivas.</p>
-
-            <h4 className="flex items-center gap-3 font-display text-xl text-white mb-2"><Megaphone className="text-accent" /> Disparo de Campanhas Estratégicas</h4>
-            <p className="text-gray-400 mb-4">Envie mensagens segmentadas e inteligentes: Campanhas promocionais, avisos importantes e muito mais com foco em resultado.</p>
-            
-            <p className="flex items-center gap-2 text-gray-400 font-bold mb-6"><Flame className="text-accent" /> Pronto para Automatizar e Crescer?</p>
+                <div className="flex flex-col gap-2">
+                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
+                    <Megaphone className="text-accent flex-shrink-0 w-6 h-6" /> Disparo de Campanhas Estratégicas
+                  </h4>
+                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Envie mensagens segmentadas e inteligentes: Campanhas promocionais, avisos importantes e muito mais com foco em resultado.</p>
+                </div>
+                
+                <div className="pt-6">
+                  <p className="flex items-center gap-2 text-white font-bold text-lg md:text-xl">
+                    <Flame className="text-accent w-6 h-6" /> Pronto para Automatizar e Crescer?
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-4 mt-10">
               {[
