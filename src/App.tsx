@@ -769,13 +769,12 @@ export default function App() {
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative aspect-[4/3] max-h-[560px] rounded-[24px] overflow-hidden bg-surface border border-border flex items-center justify-center p-10"
+            className="relative aspect-[4/3] max-h-[560px] rounded-[24px] overflow-hidden bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center p-6"
           >
-            {/* Glass effect container */}
             <img 
               src="https://i.ibb.co/G3Q1cs7s/Chat-GPT-Image-3-de-mai-de-2026-12-44-15.png"
               alt="CRM Inteligente"
-              className="absolute inset-0 w-full h-full object-contain z-10 rounded-[24px]"
+              className="w-full h-full object-contain rounded-[16px] z-10"
             />
             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(125,249,194,0.06)_0%,transparent_50%),radial-gradient(circle_at_30%_80%,rgba(91,229,255,0.08),transparent_60%)]" />
           </motion.div>
