@@ -38,7 +38,6 @@ import {
   TrendingUp,
   CheckCircle,
   Flame,
-  ArrowRight
 } from 'lucide-react';
 
 // --- Types ---
@@ -140,6 +139,7 @@ interface MediaItem {
 }
 
 const WORK_VIDEOS: MediaItem[] = [
+  { id: 'wv_new', type: 'video', src: 'gVYliZPRCGI', title: 'Destaque' },
   { id: 'wv1', type: 'video', src: 'meZvz_y8hLE', title: 'Trabalho 1' },
   { id: 'wv2', type: 'video', src: 'SfQAn5zdXEA', title: 'Trabalho 2' },
   { id: 'wv3', type: 'video', src: 'ViccFmQvDJM', title: 'Trabalho 3' },
@@ -158,6 +158,7 @@ const CAPTURES_VIDEOS: MediaItem[] = [
 ];
 
 const TESTIMONIAL_VIDEOS: MediaItem[] = [
+  { id: 'tv_new', type: 'video', src: 'lsAuQtMEtLQ', title: 'Depoimento' },
   { id: 'tv1', type: 'video', src: 'Cb7Bl_GKeF0', title: 'Depoimento 1' },
   { id: 'tv2', type: 'video', src: 'LTs37utql-s', title: 'Depoimento 2' },
 ];
@@ -249,7 +250,7 @@ const VideoItem = ({ src, title }: { src: string; title?: string }) => {
     >
       <iframe 
         ref={iframeRef}
-        src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=1&playsinline=1&enablejsapi=1&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&autohide=1`}
+        src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=1&playsinline=1&enablejsapi=1&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&autohide=1&vq=hd1080`}
         className="w-[120%] h-[120%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none object-cover"
         title={title}
         allow="autoplay; encrypted-media; picture-in-picture"
