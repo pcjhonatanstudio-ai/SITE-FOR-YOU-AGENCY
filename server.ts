@@ -90,12 +90,11 @@ function writeDB(data: DBForm[]) {
 function tryParseStructuredPrompt(prompt: string): DBForm | null {
   const lines = prompt.split('\n');
   
-  // Identify potential section headers
+  // Extract Section Headers
   const sectionHeaders: { index: number; title: string }[] = [];
-  
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
-    // Match headers like: "### 1. Title", "## 12. Title", "1. Title", "**1. Title**", etc.
+    // Match headers like "### 1. Title", "1. Title", "**1. Title**", "14. Pagamentos e sinal" etc.
     const match = trimmed.match(/^(?:#+\s*)?(?:\*\*)?(\d+)\.\s*(.*?)(?:\*\*)?:?$/);
     if (match) {
       const num = parseInt(match[1], 10);
@@ -109,203 +108,137 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
     }
   });
 
-  // If we couldn't find at least 3 sections, return null to fallback to Gemini
+  // Fallback to Gemini if there are not enough sections
   if (sectionHeaders.length < 3) {
     return null;
   }
 
   // Slice lines into sections
-  const sections: { title: string; text: string }[] = [];
+  const sections: { title: string; lines: string[] }[] = [];
   for (let i = 0; i < sectionHeaders.length; i++) {
     const startIdx = sectionHeaders[i].index;
     const endIdx = (i + 1 < sectionHeaders.length) ? sectionHeaders[i + 1].index : lines.length;
-    const secLines = lines.slice(startIdx + 1, endIdx);
+    const secLines = lines.slice(startIdx + 1, endIdx).map(l => l.trim()).filter(l => l.length > 0);
     sections.push({
       title: sectionHeaders[i].title,
-      text: secLines.join('\n')
+      lines: secLines
     });
   }
 
-  // Extract Title from before the first section
+  // Extract Title and Description from headers before first section
   let title = "QUESTIONÁRIO DE CONFIGURAÇÃO DE IA";
-  const titleBeforeFirstSecLines = lines.slice(0, sectionHeaders[0].index);
+  const titleBeforeFirstSecLines = lines.slice(0, sectionHeaders[0].index).map(l => l.trim()).filter(l => l.length > 0);
   
   for (const line of titleBeforeFirstSecLines) {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('#')) {
-      const cleanH = trimmed.replace(/^#+\s*/, '').replace(/\*\*|_/g, '').trim();
+    if (line.startsWith('#')) {
+      const cleanH = line.replace(/^#+\s*/, '').replace(/\*\*|_/g, '').trim();
       if (cleanH.length > 10) {
         title = cleanH;
         break;
       }
-    } else if (trimmed.toUpperCase() === trimmed && trimmed.length > 12 && !trimmed.includes('---')) {
-      title = trimmed.replace(/\*\*|_/g, '').trim();
+    } else if (line.toUpperCase() === line && line.length > 12 && !line.includes('---')) {
+      title = line.replace(/\*\*|_/g, '').trim();
       break;
     }
   }
 
   if (title === "QUESTIONÁRIO DE CONFIGURAÇÃO DE IA") {
     for (const line of titleBeforeFirstSecLines) {
-      const trimmed = line.trim();
-      if (trimmed.toLowerCase().includes('questionário') || trimmed.toLowerCase().includes('briefing')) {
-        title = trimmed.replace(/\*\*|#|---/g, '').trim();
+      if (line.toLowerCase().includes('questionário') || line.toLowerCase().includes('briefing')) {
+        title = line.replace(/\*\*|#|---/g, '').trim();
         break;
       }
     }
   }
 
-  // Description is whatever text is before the first section and not the title
-  let descriptionParts: string[] = [];
+  const descriptionParts: string[] = [];
   for (const line of titleBeforeFirstSecLines) {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#') && trimmed !== title && !trimmed.startsWith('---') && !trimmed.toLowerCase().includes('questionário')) {
-      descriptionParts.push(trimmed);
+    if (line && !line.startsWith('#') && line !== title && !line.startsWith('---') && !line.toLowerCase().includes('questionário')) {
+      descriptionParts.push(line);
     }
   }
   const description = descriptionParts.join('\n\n') || "Por favor, complete as perguntas de briefing com o máximo de detalhes possível.";
 
   const parsedQuestions: FormQuestion[] = [];
 
+  // Parse questions inside each section
   sections.forEach((sec, sIdx) => {
-    // We split by "Resposta:" or "Resposta :" or "Respostas:" with case-insensitivity
-    const blocksText = sec.text.split(/Resposta\s*:/gi);
-    
-    blocksText.forEach((block, bIdx) => {
-      let trimmedBlock = block.trim();
-      if (!trimmedBlock) return;
-      
-      // If it's the last block and it's tiny, skip it (usually trailing lines or HR lines)
-      if (bIdx === blocksText.length - 1 && trimmedBlock.length < 5) {
+    let currentQuestionLabel = "";
+    let currentQuestionType: 'text' | 'textarea' | 'radio' | 'checkbox' | 'select' = 'text';
+    let currentQuestionOptions: string[] = [];
+    let currentQuestionPlaceholder = "";
+    let inOptionMode = false;
+
+    const commitCurrentQuestion = () => {
+      if (!currentQuestionLabel) return;
+
+      const cleanLabel = currentQuestionLabel.replace(/^[-\s*_#•:]+|[-\s*_#•:]+$/g, '').trim();
+      const labelLower = cleanLabel.toLowerCase();
+
+      // Skip noise labels & headers
+      if (
+        labelLower === 'perguntas' || 
+        labelLower === 'perguntas:' || 
+        labelLower === 'opções' || 
+        labelLower === 'opções:' || 
+        labelLower === 'resposta' || 
+        labelLower === 'resposta:' || 
+        labelLower === 'estilo desejado' ||
+        labelLower === 'estilo desejado:' ||
+        labelLower === 'lista de procedimentos' ||
+        labelLower === 'lista de procedimentos:' ||
+        labelLower === 'contraindicações por procedimento' ||
+        labelLower === 'contraindicações por procedimento:' ||
+        cleanLabel.length <= 2
+      ) {
+        // Reset and discard
+        currentQuestionLabel = "";
+        currentQuestionOptions = [];
+        currentQuestionPlaceholder = "";
+        inOptionMode = false;
+        currentQuestionType = 'text';
         return;
       }
 
-      // Clean up markdown horizontal lines and other list symbols from start and end
-      trimmedBlock = trimmedBlock.replace(/^[\s\-*_#]+|[\s\-*_#]+$/g, '').trim();
-      if (!trimmedBlock) return;
-
-      // Skip lines that are just raw header delimiters
-      if (trimmedBlock === '---' || trimmedBlock.startsWith('###') || trimmedBlock.startsWith('##')) {
-        return;
-      }
-
-      // We have a question block!
-      const blockLines = trimmedBlock.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      if (blockLines.length === 0) return;
-
-      // Parse bullet options
-      const options: string[] = [];
-      const bullets = blockLines.filter(l => l.match(/^[*•-]\s+(.+)/) || l.match(/^\d+\.\s+(.+)/));
-      
-      const hasOptionsKeyword = trimmedBlock.toLowerCase().includes('opções:') || trimmedBlock.toLowerCase().includes('opções disponíveis:');
-      const isSelectableTypeList = trimmedBlock.toLowerCase().includes('quais regiões') || trimmedBlock.toLowerCase().includes('tom de voz') || trimmedBlock.toLowerCase().includes('opções:');
-      const containsConfirmExamples = trimmedBlock.toLowerCase().includes('exemplos para confirmar') || trimmedBlock.toLowerCase().includes('exemplos:');
-
-      if (bullets.length > 0 && (hasOptionsKeyword || isSelectableTypeList || containsConfirmExamples)) {
-        bullets.forEach(bullet => {
-          const match = bullet.match(/^[*•-]\s+(.+)$/) || bullet.match(/^\d+\.\s+(.+)$/);
-          if (match && match[1]) {
-            const cleanOpt = match[1].replace(/\*\*|_/g, '').trim();
-            if (cleanOpt.length > 1) {
-              options.push(cleanOpt);
-            }
-          }
-        });
-      }
-
-      // Find placeholder/suggestion
-      let placeholder: string | undefined = undefined;
-      const quoteMatch = trimmedBlock.match(/[“"']([^”"'\n\r]{8,})[”"']/);
-      if (quoteMatch) {
-         placeholder = quoteMatch[1].trim();
-      } else {
-        const sugIdx = blockLines.findIndex(l => l.toLowerCase().includes('sugestão') || l.toLowerCase().includes('exemplo:'));
-        if (sugIdx !== -1 && sugIdx + 1 < blockLines.length) {
-          const nextLines = blockLines.slice(sugIdx + 1);
-          const cleanSug = nextLines[0].replace(/^[“"']|[”"']$/g, '').trim();
-          if (cleanSug && !cleanSug.startsWith('*') && !cleanSug.startsWith('-') && cleanSug.length > 8) {
-            placeholder = cleanSug;
-          }
-        }
-      }
-
-      // Build label logic
-      // Find where question labels end (which is before bullet lists, options or suggestions)
-      let labelLines: string[] = [];
-      for (const line of blockLines) {
-        const lowerLine = line.toLowerCase();
-        if (
-          lowerLine.startsWith('sugestão') || 
-          lowerLine.startsWith('exemplo:') || 
-          lowerLine.startsWith('exemplos') || 
-          lowerLine.startsWith('opções:') || 
-          line.startsWith('*') || 
-          line.startsWith('-') || 
-          line.match(/^\d+\.\s+/)
-        ) {
-          break;
-        }
-        labelLines.push(line);
-      }
-
-      let label = labelLines.join(' ').trim();
-      if (!label) {
-        label = blockLines[0];
-      }
-
-      // Clean label
-      label = label.replace(/\*\*|_|#|^-/g, '').trim();
-      if (label.endsWith(':')) {
-        label = label.slice(0, -1).trim();
-      }
-
-      // Avoid creating empty or non-helpful question labels
-      if (label.length < 4 || label.toLowerCase() === 'resposta' || label.toLowerCase() === 'respostas') {
-        return;
-      }
-
-      // Determine type
-      let type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'select' = 'text';
-      const labelLower = label.toLowerCase();
-      
-      if (options.length > 0) {
-        const isCheckbox = labelLower.includes('quais') || 
-                           labelLower.includes('quais são') || 
-                           labelLower.includes('selecione') || 
-                           labelLower.includes('marcar mais') || 
-                           labelLower.includes('caixas de seleção') || 
-                           labelLower.includes('pacientes mais') || 
-                           labelLower.includes('quais perguntas') || 
-                           labelLower.includes('cuidados a paciente') || 
-                           labelLower.includes('quais regiões') || 
-                           labelLower.includes('contraindicações') || 
-                           labelLower.includes('com quais dias') || 
-                           labelLower.includes('formas de pagamento') || 
-                           labelLower.includes('exemplos para confirmar') || 
-                           labelLower.includes('deseja que a ia faça');
+      // Automatically determine the type if we have options
+      let type = currentQuestionType;
+      if (currentQuestionOptions.length > 0) {
+        const isCheckbox = 
+          labelLower.includes('quais') || 
+          labelLower.includes('marcar mais de uma') || 
+          labelLower.includes('marque as opções') ||
+          labelLower.includes('selecione todas') ||
+          labelLower.includes('quais são') || 
+          labelLower.includes('caixas de seleção') || 
+          labelLower.includes('quais perguntas') || 
+          labelLower.includes('cuidados a paciente') || 
+          labelLower.includes('quais regiões') || 
+          labelLower.includes('contraindicações') || 
+          labelLower.includes('formas de pagamento') || 
+          labelLower.includes('situações') || 
+          labelLower.includes('exemplos para confirmar') ||
+          labelLower.includes('pergunta de triagem');
         type = isCheckbox ? 'checkbox' : 'radio';
       } else {
-        const isTextarea = labelLower.includes('explique') || 
-                           labelLower.includes('descreva') || 
-                           labelLower.includes('como a ia deve') || 
-                           labelLower.includes('como você gostaria') || 
-                           labelLower.includes('como você explica') || 
-                           labelLower.includes('como funciona') || 
-                           labelLower.includes('qual a política') || 
-                           labelLower.includes('valores do tratamento') || 
-                           labelLower.includes('observações finais') || 
-                           labelLower.includes('observações importantes') || 
-                           labelLower.includes('escreva as respostas') || 
-                           labelLower.includes('alguma orientação') || 
-                           labelLower.includes('qual o valor') || 
-                           labelLower.includes('casos específicos') || 
-                           labelLower.includes('diferencial do seu protocolo') || 
-                           labelLower.includes('alguma frase específica') || 
-                           label.length > 50;
+        const isTextarea = 
+          labelLower.includes('explique') || 
+          labelLower.includes('descreva') || 
+          labelLower.includes('como a ia deve') || 
+          labelLower.includes('como você gostaria') || 
+          labelLower.includes('como você explica') || 
+          labelLower.includes('como funciona') || 
+          labelLower.includes('qual a política') || 
+          labelLower.includes('valores do tratamento') || 
+          labelLower.includes('observações') || 
+          labelLower.includes('escreva as respostas') || 
+          labelLower.includes('alguma orientação') || 
+          labelLower.includes('diferencial do seu protocolo') || 
+          labelLower.includes('alguma frase específica') || 
+          cleanLabel.length > 60;
         type = isTextarea ? 'textarea' : 'text';
       }
 
       const id = `q_sec${sIdx + 1}_` + Math.random().toString(36).substring(2, 8);
-      
       const isSec1 = sec.title.startsWith("1.") || sec.title.toLowerCase().includes("informações");
       const containsOptional = labelLower.includes('se houver') || labelLower.includes('caso possua') || labelLower.includes('opcional');
       const required = isSec1 ? !containsOptional : (!containsOptional && (
@@ -327,13 +260,149 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
       parsedQuestions.push({
         id,
         type,
-        label,
+        label: cleanLabel,
         required,
-        options: options.length > 0 ? options : undefined,
+        options: currentQuestionOptions.length > 0 ? currentQuestionOptions : undefined,
         section: sec.title,
-        placeholder
+        placeholder: currentQuestionPlaceholder ? currentQuestionPlaceholder : undefined
       });
-    });
+
+      // Reset state for next question
+      currentQuestionLabel = "";
+      currentQuestionOptions = [];
+      currentQuestionPlaceholder = "";
+      inOptionMode = false;
+      currentQuestionType = 'text';
+    };
+
+    // Iterate lines
+    for (let idx = 0; idx < sec.lines.length; idx++) {
+      const line = sec.lines[idx].trim();
+      if (!line) continue;
+
+      const lineLower = line.toLowerCase();
+
+      // Check for Resposta/Exemplo triggers
+      if (lineLower.startsWith('resposta:') || lineLower === 'resposta') {
+        commitCurrentQuestion();
+        continue;
+      }
+
+      // Check for suggestions/examples to set as placeholder
+      if (lineLower.startsWith('exemplo:') || lineLower.startsWith('sugestão:') || lineLower.startsWith('exemplos:')) {
+        let quoteMatch = line.match(/[“"']([^”"'\n\r]{6,})[”"']/);
+        if (quoteMatch) {
+          currentQuestionPlaceholder = quoteMatch[1];
+        } else if (idx + 1 < sec.lines.length) {
+          const nextL = sec.lines[idx + 1].trim();
+          if (nextL && !nextL.startsWith('-') && !nextL.startsWith('*')) {
+            currentQuestionPlaceholder = nextL.replace(/^[“"']|[”"']$/g, '');
+            idx++; // skip
+          }
+        }
+        continue;
+      }
+
+      // Check if this line is an options container trigger (e.g. "Marque uma opção:", "Selecione:")
+      if (
+        lineLower.includes('marque uma opção') || 
+        lineLower.includes('marque o estilo desejado') || 
+        lineLower.includes('selecione:') ||
+        lineLower.includes('opções disponíveis:') ||
+        lineLower.includes('exemplos para confirmar')
+      ) {
+        if (lineLower.includes('marque uma opção') || lineLower.includes('marque o estilo')) {
+          currentQuestionType = 'radio';
+        } else {
+          currentQuestionType = 'checkbox';
+        }
+        inOptionMode = true;
+        continue;
+      }
+
+      // Check if it's a bullet option or manual option
+      const bulletMatch = line.match(/^[-*•]\s+(.+)$/) || line.match(/^\d+\.\s+(.+)$/);
+      const isBullet = !!bulletMatch;
+
+      // If it looks like a separate question
+      const endsWithQuestionMark = line.endsWith('?');
+      const isQuestionColonPrompt = line.endsWith(':') && !lineLower.startsWith('exemplo') && !lineLower.startsWith('sugestão') && !lineLower.startsWith('opções') && !lineLower.startsWith('resposta');
+      
+      const startsWithQuestionWord = 
+        line.startsWith('Qual') || 
+        line.startsWith('Quais') || 
+        line.startsWith('Como') || 
+        line.startsWith('Existe') || 
+        line.startsWith('Onde') || 
+        line.startsWith('Você') || 
+        line.startsWith('Se ') ||
+        line.startsWith('A IA') ||
+        line.startsWith('Nome ') ||
+        line.startsWith('Cidade ') ||
+        line.startsWith('Instagram') ||
+        line.startsWith('Telefone') ||
+        line.startsWith('Formas de pagamento') ||
+        line.startsWith('Chave Pix');
+
+      const isNewQuestionTrigger = (endsWithQuestionMark || isQuestionColonPrompt || (startsWithQuestionWord && line.length > 15)) && !isBullet;
+
+      if (isNewQuestionTrigger) {
+        commitCurrentQuestion();
+        currentQuestionLabel = line;
+        currentQuestionType = 'text'; // Default, will change as we read options
+        continue;
+      }
+
+      // If it's a bullet, add to option list
+      if (isBullet && bulletMatch) {
+        const optText = bulletMatch[1].replace(/\*\*|_/g, '').trim();
+        if (optText.length > 1) {
+          currentQuestionOptions.push(optText);
+        }
+        continue;
+      }
+
+      // If we are in Option mode OR if the line looks like an active plain option:
+      // A plain option is short (< 80 chars), doesn't end with sentence punctuation like ? or :, 
+      // is not a question trigger, and either we are already building options or the line matches options pattern
+      const isShort = line.length < 85;
+      const isPlainOption = isShort && !line.endsWith('?') && !line.endsWith(':') && (
+        inOptionMode || 
+        currentQuestionOptions.length > 0 ||
+        line === 'Sim' || 
+        line === 'Não' || 
+        line.startsWith('Depende') ||
+        lineLower.includes('segunda-feira') ||
+        lineLower.includes('terça-feira') ||
+        lineLower.includes('quarta-feira') ||
+        lineLower.includes('quinta-feira') ||
+        lineLower.includes('sexta-feira') ||
+        lineLower.includes('sábado') ||
+        lineLower.includes('domingo') ||
+        currentQuestionLabel.toLowerCase().includes('marque') ||
+        currentQuestionLabel.toLowerCase().includes('quais procedimentos') ||
+        currentQuestionLabel.toLowerCase().includes('quais regiões') ||
+        currentQuestionLabel.toLowerCase().includes('formas de pagamento')
+      );
+
+      if (isPlainOption) {
+        const cleanOpt = line.replace(/\*\*|_/g, '').trim();
+        if (cleanOpt.length > 1) {
+          currentQuestionOptions.push(cleanOpt);
+        }
+        continue;
+      }
+
+      // Otherwise, if we don't have a question label yet, treat this as the start of a question label
+      if (!currentQuestionLabel) {
+        currentQuestionLabel = line;
+        currentQuestionType = 'text';
+      } else {
+        // Append text to existing question label (in case it is split across multiple paragraphs)
+        currentQuestionLabel += " " + line;
+      }
+    }
+    commitCurrentQuestion();
   });
 
   const finalQuestions = parsedQuestions.filter(q => q.label.length > 3);
@@ -439,19 +508,20 @@ async function startServer() {
       return res.status(400).json({ error: 'O prompt do formulário é necessário.' });
     }
 
-    // If Gemini API Key is available, prioritize high-fidelity parsing with the AI Model.
-    // Otherwise, fallback to the offline programmatic parser first, or the mock generator.
-    if (!process.env.GEMINI_API_KEY) {
-      console.warn("GEMINI_API_KEY is not defined. Falling back to structured programmatic parser or mock generator.");
-      const structuredForm = tryParseStructuredPrompt(prompt);
-      if (structuredForm) {
-        console.log("Structured prompt detected. Processing programmatically with 100% fidelity.");
-        const db = readDB();
-        db.unshift(structuredForm);
-        writeDB(db);
-        return res.json(structuredForm);
-      }
+    // 1. Try to parse programmatically first.
+    // Highly structured prompts (like pasted questionnaires) are parsed instantly with 100% fidelity.
+    const structuredForm = tryParseStructuredPrompt(prompt);
+    if (structuredForm) {
+      console.log("Structured prompt detected. Processing programmatically with 100% fidelity.");
+      const db = readDB();
+      db.unshift(structuredForm);
+      writeDB(db);
+      return res.json(structuredForm);
+    }
 
+    // 2. If not structured and GMINI_API_KEY is missing, use the mock generator fallback.
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn("GEMINI_API_KEY is not defined. Falling back to mock generator.");
       const mockForm: DBForm = {
         id: 'form_' + Math.random().toString(36).substring(2, 11),
         title: `Formulário Gerado: ${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}`,
