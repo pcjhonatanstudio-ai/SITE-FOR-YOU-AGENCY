@@ -268,6 +268,39 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
 
     // --- Render Answers Loop ---
     questions.forEach((q, index) => {
+      const prevQuestion = index > 0 ? questions[index - 1] : null;
+      const showSectionHeader = q.section && (!prevQuestion || prevQuestion.section !== q.section);
+
+      if (showSectionHeader) {
+        // Guarantee space or push to new page
+        if (y > pageHeight - 40) {
+          doc.addPage();
+          y = 30;
+          
+          // Dynamic Mini Top Brand Header
+          doc.setFillColor(11, 23, 42);
+          doc.rect(0, 0, pageWidth, 16, 'F');
+          doc.setTextColor(125, 249, 194);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9.5);
+          doc.text('FOR YOU AGENCY | BRIEFING COLETADO', margin, 10.5);
+          
+          y = 30;
+        } else {
+          y += 4;
+        }
+
+        // Section Background Band
+        doc.setFillColor(243, 244, 246);
+        doc.rect(margin, y - 5, pageWidth - (margin * 2), 7, 'F');
+        
+        doc.setTextColor(11, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text(String(q.section).toUpperCase(), margin + 3, y - 0.5);
+        y += 8;
+      }
+
       if (y > pageHeight - 32) {
         doc.addPage();
         y = 30;
@@ -278,7 +311,7 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
         doc.setTextColor(125, 249, 194);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9.5);
-        doc.text('FOR YOU AGENCY | RESPOSTO DE BRIEFING', margin, 10.5);
+        doc.text('FOR YOU AGENCY | BRIEFING COLETADO', margin, 10.5);
         
         y = 30;
       }
@@ -664,6 +697,9 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
 
                       <div className="space-y-6">
                         {selectedForm.questions.map((q, idx) => {
+                          const prevQuestion = idx > 0 ? selectedForm.questions[idx - 1] : null;
+                          const showSectionHeader = q.section && (!prevQuestion || prevQuestion.section !== q.section);
+
                           const answer = activeResponse.answers[q.id];
                           let answerDisplay = '';
                           
@@ -676,14 +712,26 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
                           }
 
                           return (
-                            <div key={q.id} className="bg-bg/40 border border-border rounded-xl p-4 relative">
-                              <div className="text-[10px] text-muted uppercase font-bold tracking-wider font-ui mb-1.5">
-                                {idx + 1}. {q.label}
+                            <React.Fragment key={q.id}>
+                              {showSectionHeader && (
+                                <div className="pt-6 pb-1">
+                                  <div className="bg-surface/50 border border-border/60 rounded-2xl px-5 py-3.5 shadow-sm">
+                                    <h4 className="text-xs font-bold text-accent tracking-wider uppercase flex items-center gap-2">
+                                      <span className="w-1.5 h-3.5 bg-accent rounded-full animate-pulse" />
+                                      {q.section}
+                                    </h4>
+                                  </div>
+                                </div>
+                              )}
+                              <div className="bg-bg/40 border border-border rounded-xl p-4 relative hover:border-accent/11 transition-all">
+                                <div className="text-[10px] text-muted uppercase font-bold tracking-wider font-ui mb-1.5">
+                                  {idx + 1}. {q.label}
+                                </div>
+                                <div className="text-white text-sm leading-relaxed font-light font-ui break-words">
+                                  {answerDisplay}
+                                </div>
                               </div>
-                              <div className="text-white text-sm leading-relaxed font-light font-ui break-words">
-                                {answerDisplay}
-                              </div>
-                            </div>
+                            </React.Fragment>
                           );
                         })}
                       </div>
@@ -727,22 +775,39 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
               </div>
 
               <div className="space-y-4 pt-1">
-                <div className="text-[10px] uppercase font-bold tracking-wider text-muted font-ui mb-1">Perguntas Estruturadas:</div>
-                {previewQuestions.questions.map((q, idx) => (
-                  <div key={idx} className="bg-bg p-4 border border-border rounded-xl">
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div className="text-xs font-bold text-white font-ui">{idx + 1}. {q.label}</div>
-                      <div className="text-[9px] uppercase tracking-wider font-bold bg-[#2BDCAD]/10 text-accent px-2 py-0.5 rounded-full font-ui">{q.type}</div>
-                    </div>
-                    {q.options && q.options.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {q.options.map((opt, oIdx) => (
-                          <span key={oIdx} className="bg-surface border border-border text-muted px-2.5 py-0.5 rounded-md text-[9px] font-ui">{opt}</span>
-                        ))}
+                <div className="text-[10px] uppercase font-bold tracking-wider text-muted font-ui mb-1">Perguntas Estruturadas por Seção:</div>
+                {previewQuestions.questions.map((q, idx) => {
+                  const prevQuestion = idx > 0 ? previewQuestions.questions[idx - 1] : null;
+                  const showSectionHeader = q.section && (!prevQuestion || prevQuestion.section !== q.section);
+
+                  return (
+                    <React.Fragment key={idx}>
+                      {showSectionHeader && (
+                        <div className="pt-4 pb-1">
+                          <div className="bg-bg/85 border border-border rounded-xl px-4 py-2.5">
+                            <h4 className="text-[11px] font-bold text-accent tracking-wider uppercase flex items-center gap-2">
+                              <span className="w-1.5 h-3 bg-accent rounded-full animate-pulse" />
+                              {q.section}
+                            </h4>
+                          </div>
+                        </div>
+                      )}
+                      <div className="bg-bg p-4 border border-border rounded-xl">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <div className="text-xs font-bold text-white font-ui">{idx + 1}. {q.label}</div>
+                          <div className="text-[9px] uppercase tracking-wider font-bold bg-[#2BDCAD]/10 text-accent px-2 py-0.5 rounded-full font-ui">{q.type}</div>
+                        </div>
+                        {q.options && q.options.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {q.options.map((opt, oIdx) => (
+                              <span key={oIdx} className="bg-surface border border-border text-muted px-2.5 py-0.5 rounded-md text-[9px] font-ui">{opt}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
 
