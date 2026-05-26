@@ -87,6 +87,254 @@ function writeDB(data: DBForm[]) {
   }
 }
 
+function tryParseStructuredPrompt(prompt: string): DBForm | null {
+  // We want to verify if the prompt indeed contains multiple numeric sections
+  const sectionMatches = prompt.match(/\b\d+\.\s+[^\n]+/g);
+  if (!sectionMatches || sectionMatches.length < 3) {
+    return null; // Not structured enough, fallback to Gemini
+  }
+
+  // Title Extraction
+  let title = "QUESTIONÁRIO DE CONFIGURAÇÃO DE IA";
+  const titleRegexes = [
+    /com o título:\s*\n*\s*([^\n]+)/i,
+    /com o título:\s*"([^"]+)"/i,
+    /com o título:\s*“([^”]+)”/i,
+    /título:\s*\n*\s*([^\n]+)/i,
+  ];
+  for (const regex of titleRegexes) {
+    const match = prompt.match(regex);
+    if (match && match[1]) {
+      title = match[1].trim().replace(/^["“'’]|["”'’]$/g, '').trim();
+      break;
+    }
+  }
+
+  if (title === "QUESTIONÁRIO DE CONFIGURAÇÃO DE IA") {
+    const lines = prompt.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    // Find first uppercase-only line that is long enough and doesn't start with a number
+    const candidateUpper = lines.find(l => l.toUpperCase() === l && l.length > 15 && !l.includes('AI STUDIO') && !l.startsWith('#') && !l.match(/^\d+\./));
+    if (candidateUpper) {
+      title = candidateUpper;
+    } else if (lines.length > 0 && !lines[0].match(/^\d+\./)) {
+      title = lines[0].replace(/^(Crie um formulário profissional para Google Forms com o título:|Crie|Título:)\s*/i, '').trim();
+    }
+  }
+
+  // Description Extraction
+  let description = "Por favor, complete as perguntas de briefing com o máximo de detalhes possível.";
+  const descRegex = /(Objetivo do formulário:|Descrição:)\s*\n*([^\n]+(?:\n(?!\n|\d+\.)[^\n]+)*)/i;
+  const descMatch = prompt.match(descRegex);
+  if (descMatch && descMatch[2]) {
+    description = descMatch[2].trim();
+  } else {
+    // Collect paragraphs before the first numbered section
+    const lines = prompt.split('\n').map(l => l.trim());
+    let beforeSecLines: string[] = [];
+    for (const l of lines) {
+      if (l.match(/^\d+\.\s+/)) break;
+      if (l && !l.toLowerCase().includes('título')) {
+        beforeSecLines.push(l);
+      }
+    }
+    if (beforeSecLines.length > 0) {
+      description = beforeSecLines.join('\n');
+    }
+  }
+
+  // Slice into sections
+  const lines = prompt.split('\n');
+  const sections: { title: string; contentLines: string[] }[] = [];
+  let currentSecTitle = "";
+  let currentSecLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const secMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+    if (secMatch) {
+      if (currentSecTitle || currentSecLines.length > 0) {
+        sections.push({
+          title: currentSecTitle || "Agentes & Operação",
+          contentLines: currentSecLines
+        });
+      }
+      currentSecTitle = trimmed;
+      currentSecLines = [];
+    } else {
+      currentSecLines.push(line);
+    }
+  }
+  if (currentSecTitle || currentSecLines.length > 0) {
+    sections.push({
+      title: currentSecTitle,
+      contentLines: currentSecLines
+    });
+  }
+
+  const parsedQuestions: FormQuestion[] = [];
+
+  sections.forEach((sec, sIdx) => {
+    const secTitle = sec.title;
+    const contentLines = sec.contentLines;
+
+    let currentQuestionLabel = "";
+    let currentQuestionOptions: string[] = [];
+    let isReadingOptions = false;
+    let placeholderText = "";
+
+    const commitQuestion = () => {
+      if (currentQuestionLabel) {
+        const cleanLabel = currentQuestionLabel.replace(/^-\s*/, '').trim();
+        const labelLower = cleanLabel.toLowerCase();
+
+        // Guard against header noise
+        if (labelLower === 'perguntas:' || labelLower === 'perguntas' || labelLower === 'opções:' || labelLower === 'opções' || labelLower.startsWith('tipo de resposta') || cleanLabel.length <= 1) {
+          currentQuestionLabel = "";
+          currentQuestionOptions = [];
+          isReadingOptions = false;
+          placeholderText = "";
+          return;
+        }
+
+        const id = `q_sec${sIdx + 1}_` + Math.random().toString(36).substring(2, 8);
+
+        // Determine type intelligently
+        let type: 'text' | 'textarea' | 'radio' | 'checkbox' | 'select' = 'text';
+        if (currentQuestionOptions.length > 0) {
+          const isCheckbox = labelLower.includes('quais') || 
+                             labelLower.includes('quais são') || 
+                             labelLower.includes('selecione') || 
+                             labelLower.includes('marcar mais') || 
+                             labelLower.includes('caixas de seleção') || 
+                             labelLower.includes('dúvidas as pacientes mais') ||
+                             labelLower.includes('quais perguntas') ||
+                             labelLower.includes('cuidados a paciente') ||
+                             labelLower.includes('quais informações') ||
+                             labelLower.includes('formas de pagamento') ||
+                             labelLower.includes('quais regiões');
+          type = isCheckbox ? 'checkbox' : 'radio';
+        } else {
+          const isTextarea = labelLower.includes('explique') || 
+                             labelLower.includes('descreva') || 
+                             labelLower.includes('como a ia deve') || 
+                             labelLower.includes('escreva as respostas') || 
+                             labelLower.includes('alguma orientação') || 
+                             labelLower.includes('como você gostaria') ||
+                             labelLower.includes('como você explica') ||
+                             labelLower.includes('como funciona') ||
+                             labelLower.includes('qual a política') ||
+                             labelLower.includes('valores do tratamento') ||
+                             labelLower.includes('observações finais') ||
+                             cleanLabel.length > 60;
+          type = isTextarea ? 'textarea' : 'text';
+        }
+
+        const isSec1 = secTitle.startsWith("1.") || secTitle.toLowerCase().includes("informações");
+        const containsOptional = labelLower.includes('se houver') || labelLower.includes('caso possua') || labelLower.includes('opcional');
+        const required = isSec1 ? !containsOptional : (!containsOptional && (labelLower.includes('nome') || labelLower.includes('telefone') || labelLower.includes('oficial') || labelLower.includes('objetivo') || labelLower.includes('qual será') || labelLower.includes('precisa passar por avaliação') || labelLower.includes('contraindicações') || labelLower.includes('quais dias') || labelLower.includes('tom de voz') || labelLower.includes('atendimento humano')));
+
+        parsedQuestions.push({
+          id,
+          type,
+          label: cleanLabel,
+          required,
+          options: currentQuestionOptions.length > 0 ? currentQuestionOptions : undefined,
+          section: secTitle,
+          placeholder: placeholderText || undefined
+        });
+
+        currentQuestionLabel = "";
+        currentQuestionOptions = [];
+        isReadingOptions = false;
+        placeholderText = "";
+      }
+    };
+
+    for (let i = 0; i < contentLines.length; i++) {
+      const line = contentLines[i].trim();
+      if (!line) continue;
+
+      const lineLower = line.toLowerCase();
+
+      // Skip lines that just say "perguntas:"
+      if (lineLower === 'perguntas:' || lineLower === 'perguntas') {
+        continue;
+      }
+
+      // Trigger reading options block
+      if (lineLower.startsWith('opções:') || lineLower.startsWith('inclua opções:') || lineLower.startsWith('opções disponíveis:')) {
+        isReadingOptions = true;
+        continue;
+      }
+
+      // Check for suggestion/placeholder editables
+      if (lineLower.includes('sugestão de resposta') || lineLower.includes('sugestão editável') || lineLower.includes('sugestão para a profissional edit')) {
+        let foundPlaceholder = "";
+        // Match standard or curly quotes
+        const quoteMatch = line.match(/[“"']([^”"']+)[”"']/);
+        if (quoteMatch) {
+          foundPlaceholder = quoteMatch[1];
+        } else if (i + 1 < contentLines.length) {
+          const nextLine = contentLines[i+1].trim();
+          if (nextLine.startsWith('“') || nextLine.startsWith('"') || nextLine.startsWith('\'')) {
+            foundPlaceholder = nextLine.replace(/^[“"']|[”"']$/g, '');
+            i++;
+          } else if (nextLine.length > 0 && !nextLine.startsWith('-')) {
+            foundPlaceholder = nextLine;
+            i++;
+          }
+        }
+        if (foundPlaceholder) {
+          placeholderText = foundPlaceholder;
+        }
+        continue;
+      }
+
+      // Trigger "tipo de resposta"
+      if (lineLower.startsWith('tipo de resposta:')) {
+        commitQuestion();
+        continue;
+      }
+
+      // Check if it's a new question bullet list item or starts with a hyphen
+      const isBullet = line.startsWith('-');
+
+      if (isBullet) {
+        commitQuestion();
+        currentQuestionLabel = line;
+        isReadingOptions = false;
+      } else if (isReadingOptions) {
+        // If we are reading options, non-hyphen lines are simply accumulated options
+        // Clean bullet inside if any
+        const cleanedOpt = line.replace(/^-\s*/, '').trim();
+        if (cleanedOpt) {
+          currentQuestionOptions.push(cleanedOpt);
+        }
+      } else {
+        // Not reading options, no hyphen. If it looks like a stand-alone question label, treat it as such.
+        // Skip header lines like "Perguntas de segurança"
+        if (!lineLower.includes('perguntas:') && !lineLower.includes('opções:')) {
+          commitQuestion();
+          currentQuestionLabel = line;
+        }
+      }
+    }
+    commitQuestion();
+  });
+
+  const cleanQuestions = parsedQuestions.filter(q => q.label.trim().length > 3);
+  if (cleanQuestions.length < 5) return null;
+
+  return {
+    id: 'form_' + Math.random().toString(36).substring(2, 11),
+    title,
+    description,
+    createdAt: new Date().toISOString(),
+    questions: cleanQuestions,
+    responses: []
+  };
+}
+
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
@@ -177,6 +425,16 @@ async function startServer() {
       return res.status(400).json({ error: 'O prompt do formulário é necessário.' });
     }
 
+    // Smart first-class programmatic parser for highly structured prompts
+    const structuredForm = tryParseStructuredPrompt(prompt);
+    if (structuredForm) {
+      console.log("Structured prompt detected. Proccessing programmatically with 100% fidelity.");
+      const db = readDB();
+      db.unshift(structuredForm);
+      writeDB(db);
+      return res.json(structuredForm);
+    }
+
     try {
       if (!process.env.GEMINI_API_KEY) {
         console.warn("GEMINI_API_KEY is not defined. Falling back to default form builder.");
@@ -226,7 +484,10 @@ async function startServer() {
         "Configure no campo 'section' o título completo da seção de agrupamento para cada pergunta (por exemplo: '1. Informações da profissional ou clínica', '2. Objetivo da IA de atendimento', '3. Sobre o procedimento de clareamento íntimo', etc.). " +
         "No campo 'placeholder', inclua sempre textos de apoio, exemplos práticos de redação sugerida ou sugestões de respostas editáveis solicitadas pelo usuário para guiar quem está respondendo.";
 
-      const userPrompt = `Crie um formulário de briefing ou pesquisa estratégico em Português para o seguinte objetivo: "${prompt}"`;
+      const userPrompt = 
+        `Seja extremamente preciso e reproduza tudo com fidelidade absoluta. Se o texto a seguir for um roteiro ou rascunho de perguntas estruturadas comercial, transcreva ele integralmente sem resumir nenhuma pergunta ou seção. ` +
+        `Caso seja apenas um pedido genérico ou um conceito simples (Ex: 'briefing comercial imobiliário'), elabore um briefing de marketing completo correspondente com 10 a 15 perguntas estrategicamente divididas em seções úteis.\n\n` +
+        `Texto do Usuário:\n"${prompt}"`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
