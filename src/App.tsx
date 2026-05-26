@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import FormsPortal from './components/FormsPortal';
+import PublicForm from './components/PublicForm';
 import { 
   MessageCircle, 
   ArrowRight, 
@@ -401,6 +403,34 @@ export default function App() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [ringPos, setRingPos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+
+  // Custom states for Forms Router
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [authToken, setAuthToken] = useState<string | null>(localStorage.getItem('foryouagency_form_token'));
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  const navigate = (path: string) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLoginSuccess = (token: string) => {
+    localStorage.setItem('foryouagency_form_token', token);
+    setAuthToken(token);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('foryouagency_form_token');
+    setAuthToken(null);
+  };
   
   const videoSliderRef = useRef<HTMLDivElement>(null);
   const testimonialsTrackRef = useRef<HTMLDivElement>(null);
@@ -458,7 +488,45 @@ export default function App() {
     }
   };
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isPortal?: boolean) => {
+    if (isPortal) {
+      e.preventDefault();
+      navigate(href);
+      setMobileMenuOpen(false);
+    } else {
+      if (currentPath !== '/') {
+        e.preventDefault();
+        window.history.pushState({}, '', '/');
+        setCurrentPath('/');
+        const hash = href.replace('#', '');
+        setTimeout(() => {
+          const el = document.getElementById(hash || 'hero');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
+      } else {
+        setMobileMenuOpen(false);
+      }
+    }
+  };
+
   const handleLinkClick = () => setMobileMenuOpen(false);
+
+  // Forms System Route Interception
+  if (currentPath.startsWith('/form/')) {
+    const formId = currentPath.split('/form/')[1];
+    return <PublicForm formId={formId} navigate={navigate} />;
+  }
+
+  if (currentPath === '/formularios' || currentPath === '/admin/forms') {
+    return (
+      <FormsPortal 
+        authToken={authToken} 
+        onLogin={handleLoginSuccess} 
+        onLogout={handleLogout} 
+        navigate={navigate} 
+      />
+    );
+  }
 
   return (
     <div className="relative min-h-screen selection:bg-accent selection:text-bg overflow-x-hidden">
@@ -551,12 +619,14 @@ export default function App() {
             { name: 'Início', href: '#hero' },
             { name: 'Sobre Nós', href: '#sobre' },
             { name: 'Serviços', href: '#servicos' },
+            { name: 'Formulários', href: '/formularios', isPortal: true },
             { name: 'Contato', href: '#cta' }
           ].map((item) => (
             <li key={item.name}>
               <a 
                 href={item.href} 
-                className="text-muted hover:text-white transition-colors relative group"
+                onClick={(e) => handleNavClick(e, item.href, item.isPortal)}
+                className="text-muted hover:text-white transition-colors relative group cursor-pointer"
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}
               >
@@ -605,9 +675,15 @@ export default function App() {
               { name: 'Início', href: '#hero' },
               { name: 'Sobre Nós', href: '#sobre' },
               { name: 'Serviços', href: '#servicos' },
+              { name: 'Formulários', href: '/formularios', isPortal: true },
               { name: 'Contato', href: '#cta' }
             ].map((item) => (
-              <a key={item.name} href={item.href} onClick={handleLinkClick} className="text-muted hover:text-accent transition-colors">
+              <a 
+                key={item.name} 
+                href={item.href} 
+                onClick={(e) => handleNavClick(e, item.href, item.isPortal)} 
+                className="text-muted hover:text-accent transition-colors cursor-pointer"
+              >
                 {item.name}
               </a>
             ))}
