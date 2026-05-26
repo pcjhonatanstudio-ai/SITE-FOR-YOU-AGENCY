@@ -17,6 +17,8 @@ interface FormQuestion {
   label: string;
   required: boolean;
   options?: string[];
+  section?: string;
+  placeholder?: string;
 }
 
 interface DBForm {
@@ -357,110 +359,146 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
           </div>
 
           {/* AI-Generated Dynamic Fields */}
-          {form.questions.map((q, idx) => (
-            <div 
-              key={q.id} 
-              id={`field-${q.id}`}
-              className="bg-surface/20 border border-border rounded-[22px] p-6 shadow-md hover:border-accent/15 transition-all"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold flex items-center justify-center">
-                  {idx + 1}
-                </span>
-                <label className="font-ui text-xs font-bold text-white uppercase tracking-wider">
-                  {q.label} {q.required && <span className="text-accent">*</span>}
-                </label>
-              </div>
+          {form.questions.map((q, idx) => {
+            const prevQuestion = idx > 0 ? form.questions[idx - 1] : null;
+            const showSectionHeader = q.section && (!prevQuestion || prevQuestion.section !== q.section);
 
-              {/* Text option */}
-              {q.type === 'text' && (
-                <input 
-                  type="text" 
-                  value={answers[q.id] || ''}
-                  onChange={(e) => handleTextChange(q.id, e.target.value)}
-                  placeholder="Escreva sua resposta..."
-                  required={q.required}
-                  className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-sm font-ui placeholder-gray-600 outline-none text-white transition-all font-light"
-                />
-              )}
-
-              {/* Textarea option */}
-              {q.type === 'textarea' && (
-                <textarea 
-                  value={answers[q.id] || ''}
-                  onChange={(e) => handleTextChange(q.id, e.target.value)}
-                  placeholder="Detalhe o máximo que puder para nosso time..."
-                  required={q.required}
-                  className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-sm font-ui placeholder-gray-600 outline-none text-white h-32 transition-all font-light overflow-y-auto"
-                />
-              )}
-
-              {/* Select Option (Dropdown) */}
-              {q.type === 'select' && (
-                <div className="relative">
-                  <select
-                    value={answers[q.id] || ''}
-                    onChange={(e) => handleSingleSelect(q.id, e.target.value)}
-                    required={q.required}
-                    className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-4 text-sm font-ui outline-none text-white transition-all font-light appearance-none"
-                  >
-                    <option value="" disabled className="bg-bg text-gray-400">Clique para selecionar uma opção</option>
-                    {q.options?.map((opt, oIdx) => (
-                      <option key={oIdx} value={opt} className="bg-surface text-white py-2">{opt}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted">
-                    ▼
+            return (
+              <React.Fragment key={q.id}>
+                {showSectionHeader && (
+                  <div className="pt-8 pb-3">
+                    <div className="bg-surface/35 border border-border/80 rounded-[22px] px-6 py-4 backdrop-blur-sm">
+                      <h3 className="font-display text-xs font-semibold text-accent tracking-wider uppercase flex items-center gap-2">
+                        <span className="w-1.5 h-3.5 bg-accent rounded-full animate-pulse" />
+                        {q.section}
+                      </h3>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Radio options */}
-              {q.type === 'radio' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-1">
-                  {q.options?.map((opt, oIdx) => {
-                    const isSelected = answers[q.id] === opt;
-                    return (
-                      <button
-                        type="button"
-                        key={oIdx}
-                        onClick={() => handleSingleSelect(q.id, opt)}
-                        className={`p-3.5 rounded-xl border text-left font-ui text-[12.5px] transition-all flex items-center gap-3 ${isSelected ? 'bg-accent/10 border-accent text-white font-medium' : 'bg-bg/40 border-border hover:border-white/20 text-muted'}`}
-                      >
-                        <span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
-                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-bg" />}
-                        </span>
-                        <span>{opt}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+                <div 
+                  id={`field-${q.id}`}
+                  className="bg-surface/20 border border-border rounded-[22px] p-6 shadow-md hover:border-accent/15 transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                      {idx + 1}
+                    </span>
+                    <label className="font-ui text-xs font-bold text-white uppercase tracking-wider">
+                      {q.label} {q.required && <span className="text-accent">*</span>}
+                    </label>
+                  </div>
 
-              {/* Checkbox option */}
-              {q.type === 'checkbox' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-1">
-                  {q.options?.map((opt, oIdx) => {
-                    const list = answers[q.id] || [];
-                    const isSelected = list.includes(opt);
-                    return (
-                      <button
-                        type="button"
-                        key={oIdx}
-                        onClick={() => handleCheckboxToggle(q.id, opt)}
-                        className={`p-3.5 rounded-xl border text-left font-ui text-[12.5px] transition-all flex items-center gap-3 ${isSelected ? 'bg-accent/10 border-accent text-white font-medium' : 'bg-bg/40 border-border hover:border-white/20 text-muted'}`}
+                  {/* Placeholder Suggestion Helper */}
+                  {q.placeholder && (
+                    <div className="flex items-start justify-between gap-4 text-[11px] text-muted leading-relaxed font-light mb-3.5 bg-bg/30 border border-border/40 rounded-xl p-3.5">
+                      <div className="flex-1">
+                        <span className="block text-[10px] uppercase font-bold text-[#2BDCAD] tracking-wider mb-1">Sugestão de resposta editável:</span>
+                        <p className="italic">"{q.placeholder}"</p>
+                      </div>
+                      {(q.type === 'text' || q.type === 'textarea') && (
+                        <button
+                          type="button"
+                          onClick={() => handleTextChange(q.id, q.placeholder || '')}
+                          className="text-accent hover:text-white transition-colors cursor-pointer text-[10px] font-mono flex-shrink-0 uppercase font-bold self-center border border-accent/30 hover:border-accent bg-accent/5 px-3 py-1.5 rounded-lg active:scale-95"
+                        >
+                          Usar Sugestão
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Text option */}
+                  {q.type === 'text' && (
+                    <input 
+                      type="text" 
+                      value={answers[q.id] || ''}
+                      onChange={(e) => handleTextChange(q.id, e.target.value)}
+                      placeholder={q.placeholder || "Escreva sua resposta..."}
+                      required={q.required}
+                      className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-sm font-ui placeholder-gray-600 outline-none text-white transition-all font-light"
+                    />
+                  )}
+
+                  {/* Textarea option */}
+                  {q.type === 'textarea' && (
+                    <textarea 
+                      value={answers[q.id] || ''}
+                      onChange={(e) => handleTextChange(q.id, e.target.value)}
+                      placeholder={q.placeholder || "Detalhe o máximo que puder para nosso time..."}
+                      required={q.required}
+                      className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-sm font-ui placeholder-gray-600 outline-none text-white h-32 transition-all font-light overflow-y-auto"
+                    />
+                  )}
+
+                  {/* Select Option (Dropdown) */}
+                  {q.type === 'select' && (
+                    <div className="relative">
+                      <select
+                        value={answers[q.id] || ''}
+                        onChange={(e) => handleSingleSelect(q.id, e.target.value)}
+                        required={q.required}
+                        className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-4 text-sm font-ui outline-none text-white transition-all font-light appearance-none"
                       >
-                        <span className={`w-4 h-4 rounded-md border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
-                          {isSelected && <CheckCircle2 className="w-3 h-3 text-bg fill-accent" />}
-                        </span>
-                        <span>{opt}</span>
-                      </button>
-                    );
-                  })}
+                        <option value="" disabled className="bg-bg text-gray-400">Clique para selecionar uma opção</option>
+                        {q.options?.map((opt, oIdx) => (
+                          <option key={oIdx} value={opt} className="bg-surface text-white py-2">{opt}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted">
+                        ▼
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Radio options */}
+                  {q.type === 'radio' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-1">
+                      {q.options?.map((opt, oIdx) => {
+                        const isSelected = answers[q.id] === opt;
+                        return (
+                          <button
+                            type="button"
+                            key={oIdx}
+                            onClick={() => handleSingleSelect(q.id, opt)}
+                            className={`p-3.5 rounded-xl border text-left font-ui text-[12.5px] transition-all flex items-center gap-3 ${isSelected ? 'bg-accent/10 border-accent text-white font-medium' : 'bg-bg/40 border-border hover:border-white/20 text-muted'}`}
+                          >
+                            <span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
+                              {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-bg" />}
+                            </span>
+                            <span>{opt}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Checkbox option */}
+                  {q.type === 'checkbox' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-1">
+                      {q.options?.map((opt, oIdx) => {
+                        const list = answers[q.id] || [];
+                        const isSelected = list.includes(opt);
+                        return (
+                          <button
+                            type="button"
+                            key={oIdx}
+                            onClick={() => handleCheckboxToggle(q.id, opt)}
+                            className={`p-3.5 rounded-xl border text-left font-ui text-[12.5px] transition-all flex items-center gap-3 ${isSelected ? 'bg-accent/10 border-accent text-white font-medium' : 'bg-bg/40 border-border hover:border-white/20 text-muted'}`}
+                          >
+                            <span className={`w-4 h-4 rounded-md border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
+                              {isSelected && <CheckCircle2 className="w-3 h-3 text-bg fill-accent" />}
+                            </span>
+                            <span>{opt}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+              </React.Fragment>
+            );
+          })}
 
           {/* Submit Action */}
           <div className="pt-4">

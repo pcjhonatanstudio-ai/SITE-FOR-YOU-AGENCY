@@ -14,6 +14,8 @@ interface FormQuestion {
   label: string;
   required: boolean;
   options?: string[];
+  section?: string;
+  placeholder?: string;
 }
 
 interface FormResponse {
@@ -210,12 +212,19 @@ async function startServer() {
       });
 
       const systemInstruction = 
-        "Você é um especialista em marketing, agência digital de posicionamento, marketing de influência e captação automática de clientes. " +
-        "Sua tarefa é projetar um formulário focado e estratégico que a agência enviará para seus clientes coletarem briefing/respostas estruturadas de seu projeto. " +
-        "As perguntas devem ser altamente profissionais e ajudar o proprietário da agência a extrair as melhores informações para desenhar a estratégia ideal. " +
-        "Use estes tipos de perguntas: 'text' (texto curto), 'textarea' (parágrafo longo), 'select' (única escolha por dropdown), 'radio' (botão de escolha única visível) e 'checkbox' (múltiplas caixas de seleção). " +
-        "Para os tipos select, radio e checkbox, forneça obrigatoriamente um array 'options' com opções de respostas muito bem elaboradas. " +
-        "Sempre inclua Nome Completo, WhatsApp / Nome da Marca como campos obrigatórios logo no início.";
+        "Você é um engenheiro de formulários estratégico e especialista em marketing e automação por IA com extrema atenção ao tom de voz, detalhes e exigências de conformidade. " +
+        "Sua tarefa é analisar o prompt do usuário e gerar a estrutura completa do formulário em formato JSON. " +
+        "Se o usuário enviou um roteiro estruturado detalhado (por exemplo, com seções de 1 a N, perguntas e opções de resposta exatas, observações e sugestões de caixa de texto ou área de texto), você DEVE " +
+        "reproduzir, estruturar e redigir esse roteiro de forma extremamente fiel, inteligente, profissional e COMPLETA, sem resumir, cortar ou omitir perguntas ou seções. " +
+        "Mantenha uma linguagem acolhedora, discreta e elegante se o tema for sensível. " +
+        "As perguntas devem seguir exatamente as diretrizes de tipo do usuário. Se omitido, use inteligência baseada no contexto para definir: " +
+        "- 'text': para respostas curtas, nomes, valores, contatos. " +
+        "- 'textarea': para parágrafos, explicações ricas, relatos de experiências ou sugestões de modelos a serem editados pelo usuário. " +
+        "- 'radio': para múltipla escolha com opções predefinidas (escolha única visível). " +
+        "- 'checkbox': para caixas de seleção com opções predefinidas (escolha de um ou mais itens). " +
+        "- 'select': para dropdown de escolha simples. " +
+        "Configure no campo 'section' o título completo da seção de agrupamento para cada pergunta (por exemplo: '1. Informações da profissional ou clínica', '2. Objetivo da IA de atendimento', '3. Sobre o procedimento de clareamento íntimo', etc.). " +
+        "No campo 'placeholder', inclua sempre textos de apoio, exemplos práticos de redação sugerida ou sugestões de respostas editáveis solicitadas pelo usuário para guiar quem está respondendo.";
 
       const userPrompt = `Crie um formulário de briefing ou pesquisa estratégico em Português para o seguinte objetivo: "${prompt}"`;
 
@@ -230,32 +239,40 @@ async function startServer() {
             properties: {
               title: { 
                 type: Type.STRING, 
-                description: "Título curto, preciso e elegante para o formulário. Ex: Briefing de Gestão de Redes Sociais" 
+                description: "O título exato, completo e elegante para o formulário conforme solicitado ou extraído do prompt. Ex: QUESTIONÁRIO PARA CONFIGURAÇÃO DA IA DE ATENDIMENTO — CLAREAMENTO ÍNTIMO" 
               },
               description: { 
                 type: Type.STRING, 
-                description: "Pequeno texto de introdução do formulário explicando a importância dele para desenhar o projeto perfeito" 
+                description: "Texto de introdução e objetivo do formulário focado no negócio do cliente, explicando acolhedoramente por que estas respostas são cruciais." 
               },
               questions: {
                 type: Type.ARRAY,
-                description: "Array com 5 a 8 perguntas de marketing de alto nível",
+                description: "A lista de perguntas ordenada de forma a mapear fielmente TODAS as seções e perguntas especificadas pelo usuário sem qualquer corte ou simplificação.",
                 items: {
                   type: Type.OBJECT,
                   properties: {
-                    id: { type: Type.STRING, description: "ID único em minúsculo (ex: q_nome, q_publico, q_investimento)" },
+                    id: { type: Type.STRING, description: "ID único em minúsculo com prefixo correspondente à seção (ex: q_sec1_nome, q_sec2_objetivo, q_sec3_regiao_tratar)" },
                     type: { 
                       type: Type.STRING, 
                       description: "Deve ser exatamente uma destas strings: 'text', 'textarea', 'radio', 'checkbox', 'select'" 
                     },
-                    label: { type: Type.STRING, description: "A pergunta a ser feita de forma clara e instigante. Ex: Qual a sua expectativa de faturamento com este projeto?" },
-                    required: { type: Type.BOOLEAN, description: "Indica se a pergunta é obrigatória" },
+                    label: { type: Type.STRING, description: "A pergunta a ser feita de forma clara, acolhedora e instigante." },
+                    required: { type: Type.BOOLEAN, description: "Indica se o campo é obrigatório (especialmente para dados cruciais como identificação, telefone e informações essenciais da operação)." },
                     options: {
                       type: Type.ARRAY,
-                      description: "Lista de strings elegantes para responder se o tipo for select, radio ou checkbox. Ex: ['Menos de R$2.000', 'R$2.000 a R$5.000', 'Mais de R$5.000']",
+                      description: "Lista de opções de strings ricas para responder se o tipo for select, radio ou checkbox.",
                       items: { type: Type.STRING }
+                    },
+                    section: {
+                      type: Type.STRING,
+                      description: "O título completo da seção do formulário em que esta pergunta está inserida (ex: '3. Sobre o procedimento de clareamento íntimo'). Isso é obrigatório para todas as perguntas agrupadas."
+                    },
+                    placeholder: {
+                      type: Type.STRING,
+                      description: "Indicação de resposta sugerida, orientação do que responder ou exemplo editável fornecido pelo usuário."
                     }
                   },
-                  required: ["id", "type", "label", "required"]
+                  required: ["id", "type", "label", "required", "section"]
                 }
               }
             },

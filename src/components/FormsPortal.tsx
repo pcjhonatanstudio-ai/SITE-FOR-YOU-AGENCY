@@ -26,6 +26,8 @@ interface FormQuestion {
   label: string;
   required: boolean;
   options?: string[];
+  section?: string;
+  placeholder?: string;
 }
 
 interface FormResponse {
