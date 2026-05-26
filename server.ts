@@ -439,39 +439,41 @@ async function startServer() {
       return res.status(400).json({ error: 'O prompt do formulário é necessário.' });
     }
 
-    // Smart first-class programmatic parser for highly structured prompts
-    const structuredForm = tryParseStructuredPrompt(prompt);
-    if (structuredForm) {
-      console.log("Structured prompt detected. Proccessing programmatically with 100% fidelity.");
+    // If Gemini API Key is available, prioritize high-fidelity parsing with the AI Model.
+    // Otherwise, fallback to the offline programmatic parser first, or the mock generator.
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn("GEMINI_API_KEY is not defined. Falling back to structured programmatic parser or mock generator.");
+      const structuredForm = tryParseStructuredPrompt(prompt);
+      if (structuredForm) {
+        console.log("Structured prompt detected. Processing programmatically with 100% fidelity.");
+        const db = readDB();
+        db.unshift(structuredForm);
+        writeDB(db);
+        return res.json(structuredForm);
+      }
+
+      const mockForm: DBForm = {
+        id: 'form_' + Math.random().toString(36).substring(2, 11),
+        title: `Formulário Gerado: ${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}`,
+        description: `Formulário gerado de forma simulada para: "${prompt}". Configure a chave GEMINI_API_KEY em Secrets para gerar com IA real.`,
+        createdAt: new Date().toISOString(),
+        questions: [
+          { id: 'q_nome', type: 'text', label: 'Nome Completo', required: true },
+          { id: 'q_contato', type: 'text', label: 'WhatsApp / Contato', required: true },
+          { id: 'q_desafio', type: 'textarea', label: `Qual o seu principal objetivo ou dúvida sobre: "${prompt}"?`, required: true },
+          { id: 'q_prioridade', type: 'radio', label: 'Qual a sua prioridade imediata?', required: true, options: ['Aumentar faturamento rapidamente', 'Organizar processos internos', 'Fortalecer presença de marca', 'Outro de urgência máxima'] },
+          { id: 'q_horario', type: 'select', label: 'Qual o melhor período do dia para nosso time agendar uma conversa com você?', required: true, options: ['Manhã (09h às 12h)', 'Tarde (13h às 18h)', 'Outro / Preferência por WhatsApp'] }
+        ],
+        responses: []
+      };
+
       const db = readDB();
-      db.unshift(structuredForm);
+      db.unshift(mockForm);
       writeDB(db);
-      return res.json(structuredForm);
+      return res.json(mockForm);
     }
 
     try {
-      if (!process.env.GEMINI_API_KEY) {
-        console.warn("GEMINI_API_KEY is not defined. Falling back to default form builder.");
-        const mockForm: DBForm = {
-          id: 'form_' + Math.random().toString(36).substring(2, 11),
-          title: `Formulário Gerado: ${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}`,
-          description: `Formulário gerado de forma simulada para: "${prompt}". Configure a chave GEMINI_API_KEY em Secrets para gerar com IA real.`,
-          createdAt: new Date().toISOString(),
-          questions: [
-            { id: 'q_nome', type: 'text', label: 'Nome Completo', required: true },
-            { id: 'q_contato', type: 'text', label: 'WhatsApp / Contato', required: true },
-            { id: 'q_desafio', type: 'textarea', label: `Qual o seu principal objetivo ou dúvida sobre: "${prompt}"?`, required: true },
-            { id: 'q_prioridade', type: 'radio', label: 'Qual a sua prioridade imediata?', required: true, options: ['Aumentar faturamento rapidamente', 'Organizar processos internos', 'Fortalecer presença de marca', 'Outro de urgência máxima'] },
-            { id: 'q_horario', type: 'select', label: 'Qual o melhor período do dia para nosso time agendar uma conversa com você?', required: true, options: ['Manhã (09h às 12h)', 'Tarde (13h às 18h)', 'Outro / Preferência por WhatsApp'] }
-          ],
-          responses: []
-        };
-
-        const db = readDB();
-        db.unshift(mockForm);
-        writeDB(db);
-        return res.json(mockForm);
-      }
 
       const { GoogleGenAI, Type } = await import('@google/genai');
       const ai = new GoogleGenAI({
