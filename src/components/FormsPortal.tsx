@@ -28,6 +28,7 @@ interface FormQuestion {
   options?: string[];
   section?: string;
   placeholder?: string;
+  description?: string;
 }
 
 interface FormResponse {
@@ -724,7 +725,7 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
                                 </div>
                               )}
                               <div className="bg-bg/40 border border-border rounded-xl p-4 relative hover:border-accent/11 transition-all">
-                                <div className="text-[10px] text-muted uppercase font-bold tracking-wider font-ui mb-1.5">
+                                <div className="text-[11px] text-muted font-bold tracking-wide font-ui mb-1.5">
                                   {idx + 1}. {q.label}
                                 </div>
                                 <div className="text-white text-sm leading-relaxed font-light font-ui break-words">

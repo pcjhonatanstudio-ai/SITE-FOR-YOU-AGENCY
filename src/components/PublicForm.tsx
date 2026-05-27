@@ -19,6 +19,7 @@ interface FormQuestion {
   options?: string[];
   section?: string;
   placeholder?: string;
+  description?: string;
 }
 
 interface DBForm {
@@ -384,10 +385,16 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                     <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold flex items-center justify-center flex-shrink-0">
                       {idx + 1}
                     </span>
-                    <label className="font-ui text-xs font-bold text-white uppercase tracking-wider">
+                    <label className="font-ui text-[13px] font-semibold text-white tracking-wide">
                       {q.label} {q.required && <span className="text-accent">*</span>}
                     </label>
                   </div>
+
+                  {q.description && (
+                    <div className="text-xs text-muted/85 leading-relaxed font-light mb-4 ml-7 whitespace-pre-line bg-surface/10 border border-border/30 rounded-xl p-3.5">
+                      {q.description}
+                    </div>
+                  )}
 
                   {/* Placeholder Suggestion Helper */}
                   {q.placeholder && (

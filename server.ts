@@ -16,6 +16,7 @@ interface FormQuestion {
   options?: string[];
   section?: string;
   placeholder?: string;
+  description?: string;
 }
 
 interface FormResponse {
@@ -160,14 +161,14 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
   const description = descriptionParts.join('\n\n') || "Por favor, complete as perguntas de briefing com o máximo de detalhes possível.";
 
   const parsedQuestions: FormQuestion[] = [];
-
-  // Parse questions inside each section
   sections.forEach((sec, sIdx) => {
     let currentQuestionLabel = "";
     let currentQuestionType: 'text' | 'textarea' | 'radio' | 'checkbox' | 'select' = 'text';
     let currentQuestionOptions: string[] = [];
     let currentQuestionPlaceholder = "";
+    let currentQuestionDescriptionLines: string[] = [];
     let inOptionMode = false;
+    let inExemplosMode = false;
 
     const commitCurrentQuestion = () => {
       if (!currentQuestionLabel) return;
@@ -195,7 +196,9 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         currentQuestionLabel = "";
         currentQuestionOptions = [];
         currentQuestionPlaceholder = "";
+        currentQuestionDescriptionLines = [];
         inOptionMode = false;
+        inExemplosMode = false;
         currentQuestionType = 'text';
         return;
       }
@@ -264,14 +267,17 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         required,
         options: currentQuestionOptions.length > 0 ? currentQuestionOptions : undefined,
         section: sec.title,
-        placeholder: currentQuestionPlaceholder ? currentQuestionPlaceholder : undefined
+        placeholder: currentQuestionPlaceholder ? currentQuestionPlaceholder : undefined,
+        description: currentQuestionDescriptionLines.length > 0 ? currentQuestionDescriptionLines.join('\n') : undefined
       });
 
       // Reset state for next question
       currentQuestionLabel = "";
       currentQuestionOptions = [];
       currentQuestionPlaceholder = "";
+      currentQuestionDescriptionLines = [];
       inOptionMode = false;
+      inExemplosMode = false;
       currentQuestionType = 'text';
     };
 
@@ -282,51 +288,64 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
 
       const lineLower = line.toLowerCase();
 
-      // Check for Resposta/Exemplo triggers
-      if (lineLower.startsWith('resposta:') || lineLower === 'resposta') {
+      // Check for Resposta/Exemplo/Answer Triggers that finalize questions
+      const isAnswer = lineLower === 'resposta' || lineLower.startsWith('resposta:') || 
+                       lineLower.startsWith('respostas:') || lineLower.startsWith('lista de procedimentos:') ||
+                       lineLower.startsWith('procedimento principal a ser destacado:') || lineLower.startsWith('caso tenha valores fixos:') ||
+                       lineLower.startsWith('política de cancelamento/remarcação:') || lineLower.startsWith('informações obrigatórias para agendamento:') ||
+                       lineLower.startsWith('contraindicações por procedimento:') || lineLower.startsWith('principais dúvidas e respostas:') ||
+                       lineLower.startsWith('situações que devem ser encaminhadas para humano:') || lineLower.startsWith('procedimento incluído:') ||
+                       lineLower.startsWith('valor promocional:') || lineLower.startsWith('validade da promoção:') ||
+                       lineLower.startsWith('regras ou condições:') || lineLower.startsWith('orientações antes do procedimento:') ||
+                       lineLower.startsWith('orientações após o procedimento:') || lineLower.startsWith('perguntas obrigatórias de triagem:') ||
+                       lineLower.startsWith('estilo desejado:') || lineLower.startsWith('valor ou percentual do sinal:') ||
+                       lineLower.startsWith('chave pix ou informações de pagamento:') || lineLower.startsWith('horários disponíveis para atendimento:');
+
+      if (isAnswer) {
         commitCurrentQuestion();
         continue;
       }
 
-      // Check for suggestions/examples to set as placeholder
-      if (lineLower.startsWith('exemplo:') || lineLower.startsWith('sugestão:') || lineLower.startsWith('exemplos:')) {
-        let quoteMatch = line.match(/[“"']([^”"'\n\r]{6,})[”"']/);
-        if (quoteMatch) {
-          currentQuestionPlaceholder = quoteMatch[1];
-        } else if (idx + 1 < sec.lines.length) {
-          const nextL = sec.lines[idx + 1].trim();
-          if (nextL && !nextL.startsWith('-') && !nextL.startsWith('*')) {
-            currentQuestionPlaceholder = nextL.replace(/^[“"']|[”"']$/g, '');
-            idx++; // skip
-          }
-        }
-        continue;
-      }
+      // Check for instruction triggers: "Marque uma opção", etc.
+      const isInstruction = lineLower.includes('marque uma opção') || lineLower.includes('marque o estilo desejado') ||
+                            lineLower.includes('selecione:') || lineLower.startsWith('exemplo:') || 
+                            lineLower.startsWith('exemplos:') || lineLower.startsWith('sugestão:') || 
+                            lineLower.startsWith('sugestão');
 
-      // Check if this line is an options container trigger (e.g. "Marque uma opção:", "Selecione:")
-      if (
-        lineLower.includes('marque uma opção') || 
-        lineLower.includes('marque o estilo desejado') || 
-        lineLower.includes('selecione:') ||
-        lineLower.includes('opções disponíveis:') ||
-        lineLower.includes('exemplos para confirmar')
-      ) {
+      if (isInstruction) {
         if (lineLower.includes('marque uma opção') || lineLower.includes('marque o estilo')) {
           currentQuestionType = 'radio';
-        } else {
+          inOptionMode = true;
+        } else if (lineLower.includes('selecione:')) {
           currentQuestionType = 'checkbox';
+          inOptionMode = true;
         }
-        inOptionMode = true;
+
+        if (lineLower.startsWith('exemplo:') || lineLower.startsWith('sugestão:') || lineLower.startsWith('exemplos:')) {
+          inExemplosMode = true;
+          // Set as placeholder if a single quote is present
+          let quoteMatch = line.match(/[“"']([^”"'\n\r]{6,})[”"']/);
+          if (quoteMatch) {
+            currentQuestionPlaceholder = quoteMatch[1];
+          } else if (idx + 1 < sec.lines.length) {
+            const nextL = sec.lines[idx + 1].trim();
+            if (nextL && !nextL.startsWith('-') && !nextL.startsWith('*') && nextL.length < 80) {
+              currentQuestionPlaceholder = nextL.replace(/^[“"']|[”"']$/g, '');
+            }
+          }
+        }
+
+        currentQuestionDescriptionLines.push(line);
         continue;
       }
 
       // Check if it's a bullet option or manual option
-      const bulletMatch = line.match(/^[-*•]\s+(.+)$/) || line.match(/^\d+\.\s+(.+)$/);
+      const bulletMatch = line.match(/^[-*•]\s+(.+)$/) || line.match(/^\d+\s*[-•]\s*(.+)$/) || line.match(/^\d+\.\s+(.+)$/);
       const isBullet = !!bulletMatch;
 
-      // If it looks like a separate question
+      // Identify if the line is a new question trigger
       const endsWithQuestionMark = line.endsWith('?');
-      const isQuestionColonPrompt = line.endsWith(':') && !lineLower.startsWith('exemplo') && !lineLower.startsWith('sugestão') && !lineLower.startsWith('opções') && !lineLower.startsWith('resposta');
+      const isQuestionColonPrompt = line.endsWith(':') && !isAnswer && !isInstruction;
       
       const startsWithQuestionWord = 
         line.startsWith('Qual') || 
@@ -344,7 +363,7 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         line.startsWith('Formas de pagamento') ||
         line.startsWith('Chave Pix');
 
-      const isNewQuestionTrigger = (endsWithQuestionMark || isQuestionColonPrompt || (startsWithQuestionWord && line.length > 15)) && !isBullet;
+      const isNewQuestionTrigger = (endsWithQuestionMark || isQuestionColonPrompt || (startsWithQuestionWord && line.length > 15)) && !isBullet && !inOptionMode;
 
       if (isNewQuestionTrigger) {
         commitCurrentQuestion();
@@ -353,39 +372,44 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         continue;
       }
 
-      // If it's a bullet, add to option list
+      // If it's a bullet and we are in Option mode OR it's a bullet option list
       if (isBullet && bulletMatch) {
         const optText = bulletMatch[1].replace(/\*\*|_/g, '').trim();
-        if (optText.length > 1) {
-          currentQuestionOptions.push(optText);
+        if (inOptionMode) {
+          if (optText.length > 1) {
+            currentQuestionOptions.push(optText);
+          }
+        } else {
+          // If not in option mode, bullets are treated as description examples (e.g. Tirar dúvidas), so we keep the bullet representation
+          currentQuestionDescriptionLines.push("• " + optText);
         }
         continue;
       }
 
-      // If we are in Option mode OR if the line looks like an active plain option:
-      // A plain option is short (< 80 chars), doesn't end with sentence punctuation like ? or :, 
-      // is not a question trigger, and either we are already building options or the line matches options pattern
+      // Check if the line is a plain list option (short, specific context)
       const isShort = line.length < 85;
-      const isPlainOption = isShort && !line.endsWith('?') && !line.endsWith(':') && (
-        inOptionMode || 
+      const lowerLine = line.toLowerCase();
+      const currentLabelLower = currentQuestionLabel ? currentQuestionLabel.toLowerCase() : '';
+
+      const isLikelyOption = isShort && (
+        inOptionMode ||
         currentQuestionOptions.length > 0 ||
         line === 'Sim' || 
         line === 'Não' || 
         line.startsWith('Depende') ||
-        lineLower.includes('segunda-feira') ||
-        lineLower.includes('terça-feira') ||
-        lineLower.includes('quarta-feira') ||
-        lineLower.includes('quinta-feira') ||
-        lineLower.includes('sexta-feira') ||
-        lineLower.includes('sábado') ||
-        lineLower.includes('domingo') ||
-        currentQuestionLabel.toLowerCase().includes('marque') ||
-        currentQuestionLabel.toLowerCase().includes('quais procedimentos') ||
-        currentQuestionLabel.toLowerCase().includes('quais regiões') ||
-        currentQuestionLabel.toLowerCase().includes('formas de pagamento')
-      );
+        lowerLine.includes('segunda-feira') ||
+        lowerLine.includes('terça-feira') ||
+        lowerLine.includes('quarta-feira') ||
+        lowerLine.includes('quinta-feira') ||
+        lowerLine.includes('sexta-feira') ||
+        lowerLine.includes('sábado') ||
+        lowerLine.includes('domingo') ||
+        currentLabelLower.includes('marque') ||
+        currentLabelLower.includes('quais dias') ||
+        currentLabelLower.includes('formas de pagamento')
+      ) && !endsWithQuestionMark && !line.endsWith(':');
 
-      if (isPlainOption) {
+      if (isLikelyOption) {
         const cleanOpt = line.replace(/\*\*|_/g, '').trim();
         if (cleanOpt.length > 1) {
           currentQuestionOptions.push(cleanOpt);
@@ -393,13 +417,18 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         continue;
       }
 
-      // Otherwise, if we don't have a question label yet, treat this as the start of a question label
+      // If we don't have a label yet, treat this as the start of a question label
       if (!currentQuestionLabel) {
         currentQuestionLabel = line;
         currentQuestionType = 'text';
       } else {
-        // Append text to existing question label (in case it is split across multiple paragraphs)
-        currentQuestionLabel += " " + line;
+        // Line is helper text / description. If inExemplosMode is true, we prepend bullet styles dynamically so it looks perfect
+        if (inExemplosMode) {
+          const cleanLine = line.replace(/^[-*•]\s+/, '').trim();
+          currentQuestionDescriptionLines.push("• " + cleanLine);
+        } else {
+          currentQuestionDescriptionLines.push(line);
+        }
       }
     }
     commitCurrentQuestion();
