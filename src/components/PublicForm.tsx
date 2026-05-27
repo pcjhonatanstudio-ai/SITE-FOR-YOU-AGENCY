@@ -281,14 +281,14 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
             <div>
               <div className="flex items-center gap-2 mb-2 justify-center sm:justify-start">
                 <Bot className="w-4 h-4 text-accent" />
-                <span className="text-[10px] tracking-widest text-[#2BDCAD] font-bold uppercase font-ui">Mapeamento Inteligente</span>
+                <span className="text-[11px] sm:text-[10px] tracking-widest text-[#2BDCAD] font-bold uppercase font-ui">Mapeamento Inteligente</span>
                 <span className="w-1.5 h-1.5 bg-accent rounded-full animate-ping" />
               </div>
 
-              <h1 className="font-display text-2xl sm:text-3.5xl font-semibold mb-3 leading-tight tracking-tight">
+              <h1 className="font-display text-2.5xl sm:text-3.5xl font-semibold mb-3 leading-tight tracking-tight">
                 {form.title}
               </h1>
-              <p className="text-xs text-muted leading-relaxed font-light font-ui">
+              <p className="text-sm sm:text-xs text-muted/95 leading-relaxed font-normal font-ui">
                 {form.description}
               </p>
             </div>
@@ -306,11 +306,11 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
 
           {/* Gamified progress bar wrapper */}
           <div className="mt-8 pt-6 border-t border-border/80">
-            <div className="flex items-center justify-between text-[11px] font-mono text-muted mb-2">
+            <div className="flex items-center justify-between text-xs sm:text-[11px] font-mono text-muted mb-2">
               <span>Status do Briefing</span>
               <span className="text-accent font-bold">{getProgressPercentage()}% preenchido</span>
             </div>
-            <div className="w-full h-2 bg-bg rounded-full overflow-hidden">
+            <div className="w-full h-2.5 bg-bg rounded-full overflow-hidden">
               <motion.div 
                 className="h-full bg-gradient-to-r from-accent to-accent2"
                 initial={{ width: 0 }}
@@ -338,12 +338,12 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
           {/* Default Fixed Field: Respondent Name */}
           <div id="field-respondentName" className="bg-surface/20 border border-border rounded-[22px] p-6 shadow-md hover:border-accent/15 transition-all">
             <div className="flex items-center gap-1.5 mb-2">
-              <HelpCircle className="w-4 h-4 text-accent" />
-              <label className="font-ui text-xs font-bold text-white uppercase tracking-wider">
+              <HelpCircle className="w-4 h-4 text-accent flex-shrink-0" />
+              <label className="font-ui text-[14px] sm:text-sm font-bold text-white uppercase tracking-wider">
                 Como devemos chamar você? / Nome de sua Empresa <span className="text-accent">*</span>
               </label>
             </div>
-            <p className="text-[11px] text-muted leading-relaxed font-light mb-3">
+            <p className="text-xs sm:text-[11px] text-muted/95 leading-relaxed font-normal mb-3">
               Informe seu nome completo ou a razão social da sua marca para identificar seu briefing no sistema corporativo.
             </p>
             <input 
@@ -355,7 +355,7 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
               }}
               placeholder="Ex: Carlos Augusto Silva | Advogado"
               required
-              className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-sm font-ui placeholder-gray-600 outline-none text-white transition-all font-light"
+              className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-base sm:text-sm font-ui placeholder-gray-600 outline-none text-white transition-all font-normal"
             />
           </div>
 
@@ -369,8 +369,8 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                 {showSectionHeader && (
                   <div className="pt-8 pb-3">
                     <div className="bg-surface/35 border border-border/80 rounded-[22px] px-6 py-4 backdrop-blur-sm">
-                      <h3 className="font-display text-xs font-semibold text-accent tracking-wider uppercase flex items-center gap-2">
-                        <span className="w-1.5 h-3.5 bg-accent rounded-full animate-pulse" />
+                      <h3 className="font-display text-[13.5px] sm:text-xs font-bold text-accent tracking-wider uppercase flex items-center gap-2">
+                        <span className="w-1.5 h-3.5 bg-accent rounded-full animate-pulse flex-shrink-0" />
                         {q.section}
                       </h3>
                     </div>
@@ -379,35 +379,35 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
 
                 <div 
                   id={`field-${q.id}`}
-                  className="bg-surface/20 border border-border rounded-[22px] p-6 shadow-md hover:border-accent/15 transition-all"
+                  className="bg-surface/20 border border-border rounded-[22px] p-5 sm:p-6 shadow-md hover:border-accent/15 transition-all"
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                  <div className="flex items-start gap-3 mb-3">
+                    <span className="w-5.5 h-5.5 rounded-full bg-accent/10 border border-accent/20 text-accent font-mono text-[11px] sm:text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
                       {idx + 1}
                     </span>
-                    <label className="font-ui text-[13px] font-semibold text-white tracking-wide">
+                    <label className="font-ui text-[15px] sm:text-[13.5px] font-bold text-white tracking-wide leading-snug">
                       {q.label} {q.required && <span className="text-accent">*</span>}
                     </label>
                   </div>
 
                   {q.description && (
-                    <div className="text-xs text-muted/85 leading-relaxed font-light mb-4 ml-7 whitespace-pre-line bg-surface/10 border border-border/30 rounded-xl p-3.5">
+                    <div className="text-[13px] sm:text-xs text-muted/95 leading-relaxed font-normal mb-4 ml-0 sm:ml-8.5 whitespace-pre-line bg-surface/10 border border-border/30 rounded-xl p-4">
                       {q.description}
                     </div>
                   )}
 
                   {/* Placeholder Suggestion Helper */}
                   {q.placeholder && (
-                    <div className="flex items-start justify-between gap-4 text-[11px] text-muted leading-relaxed font-light mb-3.5 bg-bg/30 border border-border/40 rounded-xl p-3.5">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-4 text-[12px] sm:text-[11px] text-muted/95 leading-relaxed font-normal mb-4 bg-bg/30 border border-border/40 rounded-xl p-4">
                       <div className="flex-1">
-                        <span className="block text-[10px] uppercase font-bold text-[#2BDCAD] tracking-wider mb-1">Sugestão de resposta editável:</span>
+                        <span className="block text-[11px] sm:text-[10px] uppercase font-bold text-[#2BDCAD] tracking-wider mb-1">Sugestão de resposta editável:</span>
                         <p className="italic">"{q.placeholder}"</p>
                       </div>
                       {(q.type === 'text' || q.type === 'textarea') && (
                         <button
                           type="button"
                           onClick={() => handleTextChange(q.id, q.placeholder || '')}
-                          className="text-accent hover:text-white transition-colors cursor-pointer text-[10px] font-mono flex-shrink-0 uppercase font-bold self-center border border-accent/30 hover:border-accent bg-accent/5 px-3 py-1.5 rounded-lg active:scale-95"
+                          className="text-accent hover:text-white transition-colors cursor-pointer text-xs sm:text-[10px] font-mono flex-shrink-0 uppercase font-bold self-stretch sm:self-center border border-accent/30 hover:border-accent bg-accent/5 px-4.5 py-2 sm:px-3 sm:py-1.5 rounded-lg active:scale-95 text-center mt-1 sm:mt-0"
                         >
                           Usar Sugestão
                         </button>
@@ -423,7 +423,7 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                       onChange={(e) => handleTextChange(q.id, e.target.value)}
                       placeholder={q.placeholder || "Escreva sua resposta..."}
                       required={q.required}
-                      className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-sm font-ui placeholder-gray-600 outline-none text-white transition-all font-light"
+                      className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-base sm:text-sm font-ui placeholder-gray-600 outline-none text-white transition-all font-normal"
                     />
                   )}
 
@@ -434,7 +434,7 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                       onChange={(e) => handleTextChange(q.id, e.target.value)}
                       placeholder={q.placeholder || "Detalhe o máximo que puder para nosso time..."}
                       required={q.required}
-                      className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-sm font-ui placeholder-gray-600 outline-none text-white h-32 transition-all font-light overflow-y-auto"
+                      className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-3.5 text-base sm:text-sm font-ui placeholder-gray-600 outline-none text-white h-32 transition-all font-normal overflow-y-auto"
                     />
                   )}
 
@@ -445,11 +445,11 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                         value={answers[q.id] || ''}
                         onChange={(e) => handleSingleSelect(q.id, e.target.value)}
                         required={q.required}
-                        className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-4 text-sm font-ui outline-none text-white transition-all font-light appearance-none"
+                        className="w-full bg-bg/50 border border-border focus:border-accent/40 rounded-xl px-4 py-4 text-base sm:text-sm font-ui outline-none text-white transition-all font-normal appearance-none"
                       >
                         <option value="" disabled className="bg-bg text-gray-400">Clique para selecionar uma opção</option>
                         {q.options?.map((opt, oIdx) => (
-                          <option key={oIdx} value={opt} className="bg-surface text-white py-2">{opt}</option>
+                          <option key={oIdx} value={opt} className="bg-surface text-white py-2 text-base sm:text-sm">{opt}</option>
                         ))}
                       </select>
                       <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-muted">
@@ -460,7 +460,7 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
 
                   {/* Radio options */}
                   {q.type === 'radio' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 pt-1">
                       {q.options?.map((opt, oIdx) => {
                         const isSelected = answers[q.id] === opt;
                         return (
@@ -468,10 +468,10 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                             type="button"
                             key={oIdx}
                             onClick={() => handleSingleSelect(q.id, opt)}
-                            className={`p-3.5 rounded-xl border text-left font-ui text-[12.5px] transition-all flex items-center gap-3 ${isSelected ? 'bg-accent/10 border-accent text-white font-medium' : 'bg-bg/40 border-border hover:border-white/20 text-muted'}`}
+                            className={`p-4 rounded-xl border text-left font-ui text-[14px] sm:text-xs transition-all flex items-center gap-3.5 ${isSelected ? 'bg-accent/10 border-accent text-white font-semibold' : 'bg-bg/40 border-border hover:border-white/20 text-muted/95 font-normal'}`}
                           >
-                            <span className={`w-4 h-4 rounded-full border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
-                              {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-bg" />}
+                            <span className={`w-4.5 h-4.5 rounded-full border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
+                              {isSelected && <span className="w-2 h-2 rounded-full bg-bg" />}
                             </span>
                             <span>{opt}</span>
                           </button>
@@ -482,7 +482,7 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
 
                   {/* Checkbox option */}
                   {q.type === 'checkbox' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 pt-1">
                       {q.options?.map((opt, oIdx) => {
                         const list = answers[q.id] || [];
                         const isSelected = list.includes(opt);
@@ -491,10 +491,10 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                             type="button"
                             key={oIdx}
                             onClick={() => handleCheckboxToggle(q.id, opt)}
-                            className={`p-3.5 rounded-xl border text-left font-ui text-[12.5px] transition-all flex items-center gap-3 ${isSelected ? 'bg-accent/10 border-accent text-white font-medium' : 'bg-bg/40 border-border hover:border-white/20 text-muted'}`}
+                            className={`p-4 rounded-xl border text-left font-ui text-[14px] sm:text-xs transition-all flex items-center gap-3.5 ${isSelected ? 'bg-accent/10 border-accent text-white font-semibold' : 'bg-bg/40 border-border hover:border-white/20 text-muted/95 font-normal'}`}
                           >
-                            <span className={`w-4 h-4 rounded-md border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
-                              {isSelected && <CheckCircle2 className="w-3 h-3 text-bg fill-accent" />}
+                            <span className={`w-4.5 h-4.5 rounded-md border flex-shrink-0 flex items-center justify-center transition-all ${isSelected ? 'border-accent bg-accent' : 'border-border bg-bg'}`}>
+                              {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-bg fill-accent" />}
                             </span>
                             <span>{opt}</span>
                           </button>
