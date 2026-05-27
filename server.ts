@@ -90,6 +90,7 @@ function writeDB(data: DBForm[]) {
 
 function tryParseStructuredPrompt(prompt: string): DBForm | null {
   const lines = prompt.split('\n');
+  const isPureWrittenQuestionnaire = (prompt.match(/resposta/gi) || []).length > 5;
   
   // Extract Section Headers
   const sectionHeaders: { index: number; title: string }[] = [];
@@ -100,17 +101,42 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
     if (match) {
       const num = parseInt(match[1], 10);
       const name = match[2].trim().replace(/\*\*|#|_/g, '').trim();
+      
+      const containsQuestionIndicator = trimmed.includes('?') || 
+                                        name.toLowerCase().includes('qual') || 
+                                        name.toLowerCase().includes('quais') || 
+                                        name.toLowerCase().includes('como') || 
+                                        name.toLowerCase().includes('existe') || 
+                                        name.toLowerCase().includes('onde') || 
+                                        name.toLowerCase().includes('você') || 
+                                        name.toLowerCase().includes('se ') ||
+                                        name.toLowerCase().includes('a ia');
+      
+      // If pure written questionnaire is active, section headers MUST start with a markdown header '#'
+      const hasHeaderPrefix = trimmed.startsWith('#');
+      
       if (name.length > 2) {
-        sectionHeaders.push({
-          index: idx,
-          title: `${num}. ${name}`
-        });
+        if (isPureWrittenQuestionnaire) {
+          if (hasHeaderPrefix && !containsQuestionIndicator) {
+            sectionHeaders.push({
+              index: idx,
+              title: `${num}. ${name}`
+            });
+          }
+        } else {
+          if (!containsQuestionIndicator) {
+            sectionHeaders.push({
+              index: idx,
+              title: `${num}. ${name}`
+            });
+          }
+        }
       }
     }
   });
 
   // Fallback to Gemini if there are not enough sections
-  if (sectionHeaders.length < 3) {
+  if (sectionHeaders.length < 2) {
     return null;
   }
 
@@ -173,7 +199,7 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
     const commitCurrentQuestion = () => {
       if (!currentQuestionLabel) return;
 
-      const cleanLabel = currentQuestionLabel.replace(/^[-\s*_#•:]+|[-\s*_#•:]+$/g, '').trim();
+      let cleanLabel = currentQuestionLabel.replace(/^[-\s*_#•:]+|[-\s*_#•:]+$/g, '').trim();
       const labelLower = cleanLabel.toLowerCase();
 
       // Skip noise labels & headers
@@ -203,9 +229,36 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         return;
       }
 
+      // Strip leading digits and period e.g. "1. " or "1) " or "20 - " if they are questions
+      cleanLabel = cleanLabel.replace(/^(?:\*\*)?\d+\s*[\.\)-]\s*/, '').trim();
+      // Strip trailing asterisks or underscores often used for bolding
+      cleanLabel = cleanLabel.replace(/[\*_]+$/g, '').trim();
+
       // Automatically determine the type if we have options
       let type = currentQuestionType;
-      if (currentQuestionOptions.length > 0) {
+      if (isPureWrittenQuestionnaire) {
+        const isTextarea = 
+          labelLower.includes('explique') || 
+          labelLower.includes('descreva') || 
+          labelLower.includes('como a ia deve') || 
+          labelLower.includes('como você gostaria') || 
+          labelLower.includes('como você explica') || 
+          labelLower.includes('como funciona') || 
+          labelLower.includes('diretrizes') ||
+          labelLower.includes('orientações') || 
+          labelLower.includes('situações') || 
+          labelLower.includes('principais dúvidas') || 
+          labelLower.includes('detalhe') || 
+          labelLower.includes('quais benefícios') || 
+          labelLower.includes('quais procedimentos') || 
+          labelLower.includes('quais informações') || 
+          labelLower.includes('qual é o endereço completo') || 
+          labelLower.includes('tabela de preços') || 
+          labelLower.includes('regra específica') || 
+          cleanLabel.length > 50;
+        type = isTextarea ? 'textarea' : 'text';
+        currentQuestionOptions = [];
+      } else if (currentQuestionOptions.length > 0) {
         const isCheckbox = 
           labelLower.includes('quais') || 
           labelLower.includes('marcar mais de uma') || 
@@ -244,21 +297,25 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
       const id = `q_sec${sIdx + 1}_` + Math.random().toString(36).substring(2, 8);
       const isSec1 = sec.title.startsWith("1.") || sec.title.toLowerCase().includes("informações");
       const containsOptional = labelLower.includes('se houver') || labelLower.includes('caso possua') || labelLower.includes('opcional');
-      const required = isSec1 ? !containsOptional : (!containsOptional && (
-        labelLower.includes('nome') || 
-        labelLower.includes('telefone') || 
-        labelLower.includes('oficial') || 
-        labelLower.includes('objetivo') || 
-        labelLower.includes('qual será') || 
-        labelLower.includes('precisa passar por avaliação') || 
-        labelLower.includes('contraindicações') || 
-        labelLower.includes('quais dias') || 
-        labelLower.includes('tom de voz') || 
-        labelLower.includes('atendimento humano') || 
-        labelLower.includes('como você explica') || 
-        labelLower.includes('possui valor fixo') || 
-        labelLower.includes('formas de pagamento')
-      ));
+      
+      let required = false;
+      if (!isPureWrittenQuestionnaire) {
+        required = isSec1 ? !containsOptional : (!containsOptional && (
+          labelLower.includes('nome') || 
+          labelLower.includes('telefone') || 
+          labelLower.includes('oficial') || 
+          labelLower.includes('objetivo') || 
+          labelLower.includes('qual será') || 
+          labelLower.includes('precisa passar por avaliação') || 
+          labelLower.includes('contraindicações') || 
+          labelLower.includes('quais dias') || 
+          labelLower.includes('tom de voz') || 
+          labelLower.includes('atendimento humano') || 
+          labelLower.includes('como você explica') || 
+          labelLower.includes('possui valor fixo') || 
+          labelLower.includes('formas de pagamento')
+        ));
+      }
 
       parsedQuestions.push({
         id,
@@ -313,15 +370,17 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
                             lineLower.startsWith('sugestão');
 
       if (isInstruction) {
-        if (lineLower.includes('marque uma opção') || lineLower.includes('marque o estilo')) {
-          currentQuestionType = 'radio';
-          inOptionMode = true;
-        } else if (lineLower.includes('selecione:')) {
-          currentQuestionType = 'checkbox';
-          inOptionMode = true;
+        if (!isPureWrittenQuestionnaire) {
+          if (lineLower.includes('marque uma opção') || lineLower.includes('marque o estilo')) {
+            currentQuestionType = 'radio';
+            inOptionMode = true;
+          } else if (lineLower.includes('selecione:')) {
+            currentQuestionType = 'checkbox';
+            inOptionMode = true;
+          }
         }
 
-        if (lineLower.startsWith('exemplo:') || lineLower.startsWith('sugestão:') || lineLower.startsWith('exemplos:')) {
+        if (!isPureWrittenQuestionnaire && (lineLower.startsWith('exemplo:') || lineLower.startsWith('sugestão:') || lineLower.startsWith('exemplos:'))) {
           inExemplosMode = true;
           // Set as placeholder if a single quote is present
           let quoteMatch = line.match(/[“"']([^”"'\n\r]{6,})[”"']/);
@@ -339,12 +398,15 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         continue;
       }
 
-      // Check if it's a bullet option or manual option
-      const bulletMatch = line.match(/^[-*•]\s+(.+)$/) || line.match(/^\d+\s*[-•]\s*(.+)$/) || line.match(/^\d+\.\s+(.+)$/);
-      const isBullet = !!bulletMatch;
-
       // Identify if the line is a new question trigger
-      const endsWithQuestionMark = line.endsWith('?');
+      const isNumberedQuestionPattern = !line.startsWith('#') && /^(?:\*\*|\*\s*)?\d+\s*[\.\)-]\s*(.+)$/.test(line);
+      const isBullet = !isNumberedQuestionPattern && (
+        line.match(/^[-*•]\s+(.+)$/) || 
+        line.match(/^\d+\s*[-•]\s*(.+)$/) || 
+        (!isPureWrittenQuestionnaire && line.match(/^\d+\.\s+(.+)$/))
+      );
+
+      const endsWithQuestionMark = line.endsWith('?') || line.endsWith('?**') || line.endsWith('?**_') || line.endsWith('?_**');
       const isQuestionColonPrompt = line.endsWith(':') && !isAnswer && !isInstruction;
       
       const startsWithQuestionWord = 
@@ -363,7 +425,10 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
         line.startsWith('Formas de pagamento') ||
         line.startsWith('Chave Pix');
 
-      const isNewQuestionTrigger = (endsWithQuestionMark || isQuestionColonPrompt || (startsWithQuestionWord && line.length > 15)) && !isBullet && !inOptionMode;
+      const isNewQuestionTrigger = (
+        isNumberedQuestionPattern || 
+        ((endsWithQuestionMark || isQuestionColonPrompt || (startsWithQuestionWord && line.length > 15)) && !isBullet && !inOptionMode)
+      );
 
       if (isNewQuestionTrigger) {
         commitCurrentQuestion();
@@ -373,15 +438,18 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
       }
 
       // If it's a bullet and we are in Option mode OR it's a bullet option list
-      if (isBullet && bulletMatch) {
-        const optText = bulletMatch[1].replace(/\*\*|_/g, '').trim();
-        if (inOptionMode) {
-          if (optText.length > 1) {
-            currentQuestionOptions.push(optText);
+      if (isBullet) {
+        const bulletMatch = line.match(/^[-*•]\s+(.+)$/) || line.match(/^\d+\s*[-•]\s*(.+)$/) || line.match(/^\d+\.\s+(.+)$/);
+        if (bulletMatch) {
+          const optText = bulletMatch[1].replace(/\*\*|_/g, '').trim();
+          if (inOptionMode) {
+            if (optText.length > 1) {
+              currentQuestionOptions.push(optText);
+            }
+          } else {
+            // If not in option mode, bullets are treated as description examples (e.g. Tirar dúvidas), so we keep the bullet representation
+            currentQuestionDescriptionLines.push("• " + optText);
           }
-        } else {
-          // If not in option mode, bullets are treated as description examples (e.g. Tirar dúvidas), so we keep the bullet representation
-          currentQuestionDescriptionLines.push("• " + optText);
         }
         continue;
       }
@@ -391,7 +459,7 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
       const lowerLine = line.toLowerCase();
       const currentLabelLower = currentQuestionLabel ? currentQuestionLabel.toLowerCase() : '';
 
-      const isLikelyOption = isShort && (
+      const isLikelyOption = !isPureWrittenQuestionnaire && isShort && (
         inOptionMode ||
         currentQuestionOptions.length > 0 ||
         line === 'Sim' || 
