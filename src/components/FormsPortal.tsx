@@ -184,6 +184,33 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
     }
   };
 
+  const handleDeleteResponse = async (responseId: string) => {
+    if (!selectedForm) return;
+    if (!confirm('Deseja realmente excluir esta resposta permanentemente?')) return;
+
+    try {
+      const res = await fetch(`/api/forms/${selectedForm.id}/responses/${responseId}`, { method: 'DELETE' });
+      if (res.ok) {
+        // Reload form details to update the active responses list
+        const detailRes = await fetch(`/api/forms/${selectedForm.id}`);
+        if (detailRes.ok) {
+          const detailData = await detailRes.json();
+          setSelectedForm(detailData);
+          
+          // If the currently selected active response was the deleted one, switch active response to the next available one, or null
+          if (activeResponse?.id === responseId) {
+            const nextResponses = detailData.responses || [];
+            setActiveResponse(nextResponses.length > 0 ? nextResponses[0] : null);
+          }
+        }
+        // Also refresh forms list summary for responses count
+        fetchForms();
+      }
+    } catch (err) {
+      console.error("Error deleting response:", err);
+    }
+  };
+
   const handleViewDetails = async (id: string) => {
     setIsLoadingForms(true);
     try {
@@ -656,19 +683,33 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
                     ) : (
                       <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 no-scrollbar">
                         {selectedForm.responses.map((resp) => (
-                          <button
+                          <div
                             key={resp.id}
-                            onClick={() => setActiveResponse(resp)}
-                            className={`w-full text-left p-3.5 rounded-xl border transition-all flex flex-col font-ui ${activeResponse?.id === resp.id ? 'bg-accent/10 border-accent text-white' : 'bg-surface/15 border-border hover:border-white/20 text-muted'}`}
+                            className={`w-full rounded-xl border transition-all flex items-center justify-between p-3.5 font-ui ${activeResponse?.id === resp.id ? 'bg-accent/10 border-accent text-white' : 'bg-surface/15 border-border hover:border-white/20 text-muted'}`}
                           >
-                            <div className="font-semibold text-xs leading-snug text-white line-clamp-1">
-                              {resp.respondentName}
-                            </div>
-                            <div className="text-[9px] text-muted flex items-center gap-1 mt-1 font-mono">
-                              <Calendar className="w-2.5 h-2.5 text-accent" />
-                              {new Date(resp.submittedAt).toLocaleDateString('pt-BR')} - {new Date(resp.submittedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </button>
+                            <button
+                              onClick={() => setActiveResponse(resp)}
+                              className="flex-1 text-left outline-none cursor-pointer"
+                            >
+                              <div className="font-semibold text-xs leading-snug text-white line-clamp-1">
+                                {resp.respondentName}
+                              </div>
+                              <div className="text-[9px] text-muted flex items-center gap-1 mt-1 font-mono">
+                                <Calendar className="w-2.5 h-2.5 text-accent" />
+                                {new Date(resp.submittedAt).toLocaleDateString('pt-BR')} - {new Date(resp.submittedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteResponse(resp.id);
+                              }}
+                              className="p-1.5 rounded-lg text-muted/60 hover:text-red-400 hover:bg-red-500/10 transition-colors ml-2 cursor-pointer"
+                              title="Excluir resposta"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}

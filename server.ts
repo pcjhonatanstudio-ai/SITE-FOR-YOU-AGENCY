@@ -572,6 +572,23 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // Delete individual response
+  app.delete('/api/forms/:formId/responses/:responseId', (req, res) => {
+    const { formId, responseId } = req.params;
+    const db = readDB();
+    const form = db.find(f => f.id === formId);
+    if (!form) {
+      return res.status(404).json({ error: 'Formulário não encontrado.' });
+    }
+    const rIdx = form.responses.findIndex(r => r.id === responseId);
+    if (rIdx === -1) {
+      return res.status(404).json({ error: 'Resposta não encontrada.' });
+    }
+    form.responses.splice(rIdx, 1);
+    writeDB(db);
+    res.json({ success: true });
+  });
+
   // Submit client response
   app.post('/api/forms/:id/respond', (req, res) => {
     const { respondentName, answers } = req.body;
