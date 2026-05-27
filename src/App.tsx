@@ -142,10 +142,10 @@ interface MediaItem {
 
 const WORK_VIDEOS: MediaItem[] = [
   { id: 'wv_new', type: 'video', src: 'gVYliZPRCGI', title: 'Destaque' },
-  { id: 'wv1', type: 'video', src: 'meZvz_y8hLE', title: 'Trabalho 1' },
+  { id: 'wv1', type: 'video', src: 'cTBH8cLrcX0', title: 'Trabalho 1' },
   { id: 'wv2', type: 'video', src: 'SfQAn5zdXEA', title: 'Trabalho 2' },
   { id: 'wv3', type: 'video', src: 'ViccFmQvDJM', title: 'Trabalho 3' },
-  { id: 'wv4', type: 'video', src: 'P7X2SdM8wnw', title: 'Trabalho 4' },
+  { id: 'wv4', type: 'video', src: '44qyBw3ROrU', title: 'Trabalho 4' },
   { id: 'wv5', type: 'video', src: 'Hq_NDDBamcE', title: 'Trabalho 5' },
   { id: 'wv6', type: 'video', src: 'O60DyAO9WoM', title: 'Trabalho 6' },
   { id: 'wv7', type: 'video', src: '58A_8mNjqrY', title: 'Trabalho 7' },
