@@ -6,7 +6,8 @@ import os from 'os';
 import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = path.join(os.tmpdir(), 'foryouagency_forms_db.json');
+const OLD_DB_PATH = path.join(os.tmpdir(), 'foryouagency_forms_db.json');
+const DB_PATH = path.join(process.cwd(), 'foryouagency_forms_db.json');
 
 interface FormQuestion {
   id: string;
@@ -37,43 +38,31 @@ interface DBForm {
 
 function readDB(): DBForm[] {
   try {
+    // Migration: if persistent DB doesn't exist but the old temp one does, migrate it
+    if (!fs.existsSync(DB_PATH) && fs.existsSync(OLD_DB_PATH)) {
+      try {
+        const oldData = fs.readFileSync(OLD_DB_PATH, 'utf-8');
+        fs.writeFileSync(DB_PATH, oldData, 'utf-8');
+        console.log('Successfully migrated database from ephemeral tmp folder to persistent workspace folder.');
+      } catch (migrateErr) {
+        console.error('Migration failed:', migrateErr);
+      }
+    }
+
     if (!fs.existsSync(DB_PATH)) {
-      const defaultForms: DBForm[] = [
-        {
-          id: 'briefing-social-media',
-          title: 'Briefing para Criação de Conteúdo (Social Media)',
-          description: 'Responda este briefing para podermos estruturar a estratégia de conteúdo do seu perfil profissional.',
-          createdAt: new Date().toISOString(),
-          questions: [
-            { id: 'q_nome', type: 'text', label: 'Nome Completo', required: true },
-            { id: 'q_marca', type: 'text', label: 'Nome da sua Marca ou Empresa', required: true },
-            { id: 'q_publico', type: 'textarea', label: 'Quem é o seu público-alvo principal?', required: true },
-            { id: 'q_objetivo', type: 'select', label: 'Qual o seu maior objetivo no Instagram hoje?', required: true, options: ['Vender mais produtos ou serviços', 'Ganhar mais seguidores', 'Aumentar autoridade e engajamento', 'Institucional e posicionamento'] },
-            { id: 'q_cores', type: 'text', label: 'Quais as cores predominantes da sua marca?', required: false },
-            { id: 'q_frequencia', type: 'radio', label: 'Quantas vezes você deseja publicar por semana?', required: true, options: ['3 vezes por semana', '5 vezes por semana', 'Publicações diárias (7 vezes)'] }
-          ],
-          responses: [
-            {
-              id: 'resp_1',
-              submittedAt: new Date().toISOString(),
-              respondentName: 'Carlos Silva (Exemplo)',
-              answers: {
-                'q_nome': 'Carlos Silva',
-                'q_marca': 'Silva Blindagem Patrimonial',
-                'q_publico': 'Empresários e donos de posses buscando proteção cambial e sucessória jurídica.',
-                'q_objetivo': 'Aumentar autoridade e engajamento',
-                'q_cores': 'Azul Marinho, Dourado Gold, Branco Gelo',
-                'q_frequencia': '5 vezes por semana'
-              }
-            }
-          ]
-        }
-      ];
+      const defaultForms: DBForm[] = []; // No demo forms!
       fs.writeFileSync(DB_PATH, JSON.stringify(defaultForms, null, 2), 'utf-8');
       return defaultForms;
     }
     const data = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(data);
+    let forms = JSON.parse(data) as DBForm[];
+    
+    // Completely remove old briefing-social-media demo form to respect: 'não quero que tenha formularios demo'
+    const filteredForms = forms.filter(f => f.id !== 'briefing-social-media');
+    if (filteredForms.length !== forms.length) {
+      fs.writeFileSync(DB_PATH, JSON.stringify(filteredForms, null, 2), 'utf-8');
+    }
+    return filteredForms;
   } catch (error) {
     console.error('Error reading DB:', error);
     return [];
@@ -82,7 +71,8 @@ function readDB(): DBForm[] {
 
 function writeDB(data: DBForm[]) {
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    const filtered = data.filter(f => f.id !== 'briefing-social-media');
+    fs.writeFileSync(DB_PATH, JSON.stringify(filtered, null, 2), 'utf-8');
   } catch (error) {
     console.error('Error writing DB:', error);
   }
