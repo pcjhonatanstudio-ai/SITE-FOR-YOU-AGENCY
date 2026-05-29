@@ -84,6 +84,7 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
   
   // Extract Section Headers
   const sectionHeaders: { index: number; title: string }[] = [];
+  let expectedNextSectionNum = 1;
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     // Match headers like "### 1. Title", "1. Title", "**1. Title**", "14. Pagamentos e sinal" etc.
@@ -102,16 +103,19 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
                                         name.toLowerCase().includes('se ') ||
                                         name.toLowerCase().includes('a ia');
       
-      // If pure written questionnaire is active, section headers MUST start with a markdown header '#'
+      // If pure written questionnaire is active, section headers can start with a markdown header '#'
+      // OR they can be matching the sequential progression of section numbers (e.g. 1, 2, 3...)
       const hasHeaderPrefix = trimmed.startsWith('#');
       
       if (name.length > 2) {
         if (isPureWrittenQuestionnaire) {
-          if (hasHeaderPrefix && !containsQuestionIndicator) {
+          const isSequentialSection = num === expectedNextSectionNum && !containsQuestionIndicator && name.length <= 50;
+          if ((hasHeaderPrefix || isSequentialSection) && !containsQuestionIndicator) {
             sectionHeaders.push({
               index: idx,
               title: `${num}. ${name}`
             });
+            expectedNextSectionNum = num + 1;
           }
         } else {
           if (!containsQuestionIndicator) {
