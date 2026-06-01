@@ -46,6 +46,7 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [confirmChecked, setConfirmChecked] = useState(false);
 
   useEffect(() => {
     fetchFormDetails();
@@ -134,6 +135,14 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
           }
         }
       }
+    }
+
+    // Validate confirmation checkbox and button
+    if (!confirmChecked) {
+      setValidationError('Por favor, marque a caixinha de confirmação declarando que revisou e deseja enviar suas respostas.');
+      const el = document.getElementById('confirmation-checkbox-container');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
     }
 
     setIsSubmitting(true);
@@ -333,7 +342,16 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
         )}
 
         {/* Main interactive Form Fields */}
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+        <form 
+          onSubmit={handleFormSubmit} 
+          onKeyDown={(e) => {
+            const target = e.target as HTMLElement;
+            if (e.key === 'Enter' && target.tagName !== 'TEXTAREA') {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-6"
+        >
           
           {/* Default Fixed Field: Respondent Name */}
           <div id="field-respondentName" className="bg-surface/20 border border-border rounded-[22px] p-6 shadow-md hover:border-accent/15 transition-all">
@@ -507,12 +525,45 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
             );
           })}
 
+          {/* Confirmação e Termo de Envio */}
+          <div 
+            id="confirmation-checkbox-container"
+            className={`p-5 rounded-[22px] border transition-all ${confirmChecked ? 'bg-accent/10 border-accent/40' : 'bg-surface/10 border-border/80 hover:border-border'}`}
+          >
+            <label className="flex items-start gap-4 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={confirmChecked}
+                onChange={(e) => {
+                  setConfirmChecked(e.target.checked);
+                  if (validationError) setValidationError(null);
+                }}
+                className="sr-only"
+              />
+              <span className={`w-6 h-6 rounded-md border flex-shrink-0 flex items-center justify-center transition-all ${confirmChecked ? 'border-accent bg-accent' : 'border-border/80 bg-bg'}`}>
+                {confirmChecked && <CheckCircle2 className="w-4 h-4 text-bg fill-accent" />}
+              </span>
+              <div className="flex-1">
+                <span className="block text-[13.5px] sm:text-xs font-bold text-white uppercase tracking-wider mb-1">
+                  Confirmação de Envio
+                </span>
+                <p className="text-xs text-muted leading-relaxed font-normal">
+                  Declaro que revisei todas as minhas respostas preenchidas e aceito enviá-las para análise estratégica dos especialistas da For You Agency.
+                </p>
+              </div>
+            </label>
+          </div>
+
           {/* Submit Action */}
           <div className="pt-4">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-accent text-bg hover:bg-white font-ui font-bold text-sm uppercase py-4.5 rounded-2xl shadow-lg shadow-accent/10 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              disabled={isSubmitting || !confirmChecked}
+              className={`w-full font-ui font-bold text-sm uppercase py-4.5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${
+                confirmChecked 
+                  ? 'bg-accent text-bg hover:bg-white hover:scale-[1.01] active:scale-[0.98] shadow-accent/10' 
+                  : 'bg-surface text-muted border border-border cursor-not-allowed opacity-50'
+              }`}
             >
               {isSubmitting ? (
                 <>
@@ -521,7 +572,7 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
                 </>
               ) : (
                 <>
-                  <Send className="w-4 h-4 text-bg" />
+                  <Send className="w-4 h-4" />
                   Enviar Briefing Respondido
                 </>
               )}

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import os from 'os';
 import fs from 'fs';
 import { initializeApp } from 'firebase/app';
-import { initializeFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { initializeFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, setLogLevel } from 'firebase/firestore';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OLD_DB_PATH = path.join(os.tmpdir(), 'foryouagency_forms_db.json');
@@ -15,6 +15,9 @@ const DB_PATH = path.join(process.cwd(), 'foryouagency_forms_db.json');
 const firebaseConfig = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf-8')
 );
+
+// Set log level to 'error' to suppress benign connection warning logs
+setLogLevel('error');
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = initializeFirestore(firebaseApp, {
