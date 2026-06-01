@@ -4,10 +4,23 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
 import fs from 'fs';
+import { initializeApp } from 'firebase/app';
+import { initializeFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OLD_DB_PATH = path.join(os.tmpdir(), 'foryouagency_forms_db.json');
 const DB_PATH = path.join(process.cwd(), 'foryouagency_forms_db.json');
+
+// Read Firebase Config
+const firebaseConfig = JSON.parse(
+  fs.readFileSync(path.join(process.cwd(), 'firebase-applet-config.json'), 'utf-8')
+);
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = initializeFirestore(firebaseApp, {
+  experimentalForceLongPolling: true,
+  ignoreUndefinedProperties: true
+}, firebaseConfig.firestoreDatabaseId);
 
 interface FormQuestion {
   id: string;
@@ -36,45 +49,124 @@ interface DBForm {
   responses: FormResponse[];
 }
 
-function readDB(): DBForm[] {
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: null,
+      email: null,
+      emailVerified: null,
+      isAnonymous: null,
+      tenantId: null,
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+async function readDB(): Promise<DBForm[]> {
+  const formsPath = 'forms';
   try {
-    // Migration: if persistent DB doesn't exist but the old temp one does, migrate it
-    if (!fs.existsSync(DB_PATH) && fs.existsSync(OLD_DB_PATH)) {
+    // 1. Initial Migration Check
+    // If a local JSON backup exists inside DB_PATH, let's upload its contents to Firestore first, and then rename/delete the file so we don't migrate again!
+    if (fs.existsSync(DB_PATH)) {
       try {
-        const oldData = fs.readFileSync(OLD_DB_PATH, 'utf-8');
-        fs.writeFileSync(DB_PATH, oldData, 'utf-8');
-        console.log('Successfully migrated database from ephemeral tmp folder to persistent workspace folder.');
+        const localData = fs.readFileSync(DB_PATH, 'utf-8');
+        const localForms = JSON.parse(localData) as DBForm[];
+        if (Array.isArray(localForms) && localForms.length > 0) {
+          console.log(`Discovered local forms in ${DB_PATH}. Migrating ${localForms.length} forms to Firestore cloud database...`);
+          for (const form of localForms) {
+            if (form.id === 'briefing-social-media') continue;
+            const formDocRef = doc(db, 'forms', form.id);
+            await setDoc(formDocRef, form);
+          }
+          console.log('Migration to Firestore completed successfully.');
+        }
+        // Rename form file to avoid re-triggering migration
+        fs.renameSync(DB_PATH, DB_PATH + '.bak_' + Date.now());
       } catch (migrateErr) {
-        console.error('Migration failed:', migrateErr);
+        console.error('Local JSON to Firestore migration failed:', migrateErr);
       }
     }
 
-    if (!fs.existsSync(DB_PATH)) {
-      const defaultForms: DBForm[] = []; // No demo forms!
-      fs.writeFileSync(DB_PATH, JSON.stringify(defaultForms, null, 2), 'utf-8');
-      return defaultForms;
-    }
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
-    let forms = JSON.parse(data) as DBForm[];
-    
-    // Completely remove old briefing-social-media demo form to respect: 'não quero que tenha formularios demo'
-    const filteredForms = forms.filter(f => f.id !== 'briefing-social-media');
-    if (filteredForms.length !== forms.length) {
-      fs.writeFileSync(DB_PATH, JSON.stringify(filteredForms, null, 2), 'utf-8');
-    }
-    return filteredForms;
+    // 2. Fetch from Firestore
+    console.log('Fetching forms from Firestore cloud database...');
+    const formsCol = collection(db, 'forms');
+    const snapshot = await getDocs(formsCol);
+    const forms: DBForm[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      forms.push(data as DBForm);
+    });
+
+    // Sort forms by createdAt descending
+    forms.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // Filter out briefing-social-media demo form
+    return forms.filter(f => f.id !== 'briefing-social-media');
   } catch (error) {
-    console.error('Error reading DB:', error);
+    handleFirestoreError(error, OperationType.GET, formsPath);
     return [];
   }
 }
 
-function writeDB(data: DBForm[]) {
+async function writeDB(data: DBForm[]) {
   try {
+    console.log('Writing forms to Firestore cloud database...');
+    // Filter out briefing-social-media
     const filtered = data.filter(f => f.id !== 'briefing-social-media');
-    fs.writeFileSync(DB_PATH, JSON.stringify(filtered, null, 2), 'utf-8');
+
+    // To prevent orphans and keep things strictly in sync:
+    // Fetch all current documents IDs from Firestore
+    const formsCol = collection(db, 'forms');
+    const snapshot = await getDocs(formsCol);
+    const databaseIds = new Set<string>();
+    snapshot.forEach((docSnap) => {
+      databaseIds.add(docSnap.id);
+    });
+
+    const incomingIds = new Set(filtered.map(f => f.id));
+
+    // Delete any documents that are no longer present in incoming data list
+    for (const id of databaseIds) {
+      if (!incomingIds.has(id)) {
+        console.log(`Deleting form document ${id} from Firestore...`);
+        await deleteDoc(doc(db, 'forms', id));
+      }
+    }
+
+    // Upsert or write current forms
+    for (const form of filtered) {
+      const formDocRef = doc(db, 'forms', form.id);
+      await setDoc(formDocRef, form);
+    }
+    console.log('Successfully completed write to Firestore.');
   } catch (error) {
-    console.error('Error writing DB:', error);
+    handleFirestoreError(error, OperationType.WRITE, 'forms');
   }
 }
 
@@ -513,6 +605,15 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
+  // Verify connection to Firestore
+  try {
+    const testDoc = doc(db, '_connection_test', 'status');
+    await getDoc(testDoc);
+    console.log("Firebase Firestore database connection verified on server boot.");
+  } catch (error) {
+    console.error("Firebase Firestore database connection failed during startServer startup:", error);
+  }
+
   // Middleware to support JSON post payloads
   app.use(express.json());
 
@@ -532,81 +633,107 @@ async function startServer() {
   });
 
   // Fetch summary of all forms (heavy responses field omitted)
-  app.get('/api/forms', (req, res) => {
-    const db = readDB();
-    const summary = db.map(f => ({
-      id: f.id,
-      title: f.title,
-      description: f.description,
-      createdAt: f.createdAt,
-      responsesCount: f.responses.length
-    }));
-    res.json(summary);
+  app.get('/api/forms', async (req, res) => {
+    try {
+      const db = await readDB();
+      const summary = db.map(f => ({
+        id: f.id,
+        title: f.title,
+        description: f.description,
+        createdAt: f.createdAt,
+        responsesCount: f.responses ? f.responses.length : 0
+      }));
+      res.json(summary);
+    } catch (err) {
+      console.error('Error fetching forms:', err);
+      res.status(500).json({ error: 'Erro ao carregar os formulários.' });
+    }
   });
 
   // Fetch detailed form (including responses)
-  app.get('/api/forms/:id', (req, res) => {
-    const db = readDB();
-    const form = db.find(f => f.id === req.params.id);
-    if (!form) {
-      return res.status(404).json({ error: 'Formulário não encontrado.' });
+  app.get('/api/forms/:id', async (req, res) => {
+    try {
+      const db = await readDB();
+      const form = db.find(f => f.id === req.params.id);
+      if (!form) {
+        return res.status(404).json({ error: 'Formulário não encontrado.' });
+      }
+      res.json(form);
+    } catch (err) {
+      console.error('Error fetching form:', err);
+      res.status(500).json({ error: 'Erro ao carregar o formulário.' });
     }
-    res.json(form);
   });
 
   // Delete form
-  app.delete('/api/forms/:id', (req, res) => {
-    const db = readDB();
-    const index = db.findIndex(f => f.id === req.params.id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Formulário não encontrado.' });
+  app.delete('/api/forms/:id', async (req, res) => {
+    try {
+      const db = await readDB();
+      const index = db.findIndex(f => f.id === req.params.id);
+      if (index === -1) {
+        return res.status(404).json({ error: 'Formulário não encontrado.' });
+      }
+      db.splice(index, 1);
+      await writeDB(db);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Error deleting form:', err);
+      res.status(500).json({ error: 'Erro ao deletar o formulário.' });
     }
-    db.splice(index, 1);
-    writeDB(db);
-    res.json({ success: true });
   });
 
   // Delete individual response
-  app.delete('/api/forms/:formId/responses/:responseId', (req, res) => {
-    const { formId, responseId } = req.params;
-    const db = readDB();
-    const form = db.find(f => f.id === formId);
-    if (!form) {
-      return res.status(404).json({ error: 'Formulário não encontrado.' });
+  app.delete('/api/forms/:formId/responses/:responseId', async (req, res) => {
+    try {
+      const { formId, responseId } = req.params;
+      const db = await readDB();
+      const form = db.find(f => f.id === formId);
+      if (!form) {
+        return res.status(404).json({ error: 'Formulário não encontrado.' });
+      }
+      const rIdx = form.responses.findIndex(r => r.id === responseId);
+      if (rIdx === -1) {
+        return res.status(404).json({ error: 'Resposta não encontrada.' });
+      }
+      form.responses.splice(rIdx, 1);
+      await writeDB(db);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Error deleting response:', err);
+      res.status(500).json({ error: 'Erro ao deletar a resposta.' });
     }
-    const rIdx = form.responses.findIndex(r => r.id === responseId);
-    if (rIdx === -1) {
-      return res.status(404).json({ error: 'Resposta não encontrada.' });
-    }
-    form.responses.splice(rIdx, 1);
-    writeDB(db);
-    res.json({ success: true });
   });
 
   // Submit client response
-  app.post('/api/forms/:id/respond', (req, res) => {
-    const { respondentName, answers } = req.body;
-    if (!respondentName || !answers) {
-      return res.status(400).json({ error: 'Nome do respondente e respostas são obrigatórios.' });
+  app.post('/api/forms/:id/respond', async (req, res) => {
+    try {
+      const { respondentName, answers } = req.body;
+      if (!respondentName || !answers) {
+        return res.status(400).json({ error: 'Nome do respondente e respostas são obrigatórios.' });
+      }
+
+      const db = await readDB();
+      const form = db.find(f => f.id === req.params.id);
+      if (!form) {
+        return res.status(404).json({ error: 'Formulário não encontrado.' });
+      }
+
+      const newResponse: FormResponse = {
+        id: 'resp_' + Math.random().toString(36).substring(2, 11),
+        submittedAt: new Date().toISOString(),
+        respondentName,
+        answers
+      };
+
+      if (!form.responses) form.responses = [];
+      form.responses.unshift(newResponse);
+      await writeDB(db);
+
+      res.json({ success: true, response: newResponse });
+    } catch (err) {
+      console.error('Error submitting response:', err);
+      res.status(500).json({ error: 'Erro ao salvar a resposta.' });
     }
-
-    const db = readDB();
-    const form = db.find(f => f.id === req.params.id);
-    if (!form) {
-      return res.status(404).json({ error: 'Formulário não encontrado.' });
-    }
-
-    const newResponse: FormResponse = {
-      id: 'resp_' + Math.random().toString(36).substring(2, 11),
-      submittedAt: new Date().toISOString(),
-      respondentName,
-      answers
-    };
-
-    form.responses.unshift(newResponse);
-    writeDB(db);
-
-    res.json({ success: true, response: newResponse });
   });
 
   // Create form using Gemini 3.5-flash
@@ -620,11 +747,16 @@ async function startServer() {
     // Highly structured prompts (like pasted questionnaires) are parsed instantly with 100% fidelity.
     const structuredForm = tryParseStructuredPrompt(prompt);
     if (structuredForm) {
-      console.log("Structured prompt detected. Processing programmatically with 100% fidelity.");
-      const db = readDB();
-      db.unshift(structuredForm);
-      writeDB(db);
-      return res.json(structuredForm);
+      try {
+        console.log("Structured prompt detected. Processing programmatically with 100% fidelity.");
+        const db = await readDB();
+        db.unshift(structuredForm);
+        await writeDB(db);
+        return res.json(structuredForm);
+      } catch (err) {
+        console.error('Failed to save structured form:', err);
+        return res.status(500).json({ error: 'Erro ao salvar o formulário estruturado.' });
+      }
     }
 
     // 2. If not structured and GMINI_API_KEY is missing, use the mock generator fallback.
@@ -639,16 +771,21 @@ async function startServer() {
           { id: 'q_nome', type: 'text', label: 'Nome Completo', required: true },
           { id: 'q_contato', type: 'text', label: 'WhatsApp / Contato', required: true },
           { id: 'q_desafio', type: 'textarea', label: `Qual o seu principal objetivo ou dúvida sobre: "${prompt}"?`, required: true },
-          { id: 'q_prioridade', type: 'radio', label: 'Qual a sua prioridade imediata?', required: true, options: ['Aumentar faturamento rapidamente', 'Organizar processos internos', 'Fortalecer presença de marca', 'Outro de urgência máxima'] },
+          { id: 'q_prioridade', type: 'radio', label: 'Qual a sua prioridade imediata?', required: true, options: ['Aumentar faturamento rapidamente', 'Organizar processes internos', 'Fortalecer presença de marca', 'Outro de urgência máxima'] },
           { id: 'q_horario', type: 'select', label: 'Qual o melhor período do dia para nosso time agendar uma conversa com você?', required: true, options: ['Manhã (09h às 12h)', 'Tarde (13h às 18h)', 'Outro / Preferência por WhatsApp'] }
         ],
         responses: []
       };
 
-      const db = readDB();
-      db.unshift(mockForm);
-      writeDB(db);
-      return res.json(mockForm);
+      try {
+        const db = await readDB();
+        db.unshift(mockForm);
+        await writeDB(db);
+        return res.json(mockForm);
+      } catch (err) {
+        console.error('Failed to save fallback form:', err);
+        return res.status(500).json({ error: 'Erro ao salvar o formulário gerado.' });
+      }
     }
 
     try {
@@ -747,9 +884,9 @@ async function startServer() {
         responses: []
       };
 
-      const db = readDB();
+      const db = await readDB();
       db.unshift(newForm);
-      writeDB(db);
+      await writeDB(db);
 
       res.json(newForm);
     } catch (err) {
@@ -769,10 +906,15 @@ async function startServer() {
         responses: []
       };
 
-      const db = readDB();
-      db.unshift(genericForm);
-      writeDB(db);
-      res.json(genericForm);
+      try {
+        const db = await readDB();
+        db.unshift(genericForm);
+        await writeDB(db);
+        res.json(genericForm);
+      } catch (saveErr) {
+        console.error('Error saving generic fallback form:', saveErr);
+        res.status(500).json({ error: 'Erro ao salvar o formulário padrão.' });
+      }
     }
   });
 

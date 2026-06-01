@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "FormQuestion": {
+      "title": "FormQuestion",
+      "description": "A field or question inside a question form.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ID of the question field"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "textarea", "radio", "checkbox", "select"],
+          "description": "Input type"
+        },
+        "label": {
+          "type": "string",
+          "description": "Question text label"
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Is this question mandatory"
+        },
+        "options": {
+          "type": "array"
+        }
+      },
+      "required": ["id", "type", "label", "required"]
+    },
+    "FormResponse": {
+      "title": "FormResponse",
+      "description": "A participant submission for a form.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Submissions identifier"
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "respondentName": {
+          "type": "string"
+        },
+        "answers": {
+          "type": "object"
+        }
+      },
+      "required": ["id", "submittedAt", "respondentName", "answers"]
+    },
+    "DBForm": {
+      "title": "DBForm",
+      "description": "Entire structured questionnaire with title, description, configurations, and list of responses.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "questions": {
+          "type": "array"
+        },
+        "responses": {
+          "type": "array"
+        }
+      },
+      "required": ["id", "title", "description", "createdAt", "questions"]
+    }
+  },
+  "firestore": {
+    "/forms/{formId}": {
+      "schema": "DBForm",
+      "description": "Active questionnaires and list of submitted client responses."
+    }
+  }
+}
