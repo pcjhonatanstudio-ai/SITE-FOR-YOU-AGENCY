@@ -612,7 +612,7 @@ async function startServer() {
 
   // Verify connection to Firestore
   try {
-    const testDoc = doc(db, '_connection_test', 'status');
+    const testDoc = doc(db, 'forms', 'healthcheck_connection_test');
     await getDoc(testDoc);
     console.log("Firebase Firestore database connection verified on server boot.");
   } catch (error) {
