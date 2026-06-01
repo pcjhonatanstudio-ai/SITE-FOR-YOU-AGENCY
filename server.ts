@@ -152,29 +152,6 @@ async function writeDB(data: DBForm[]) {
     // Filter out briefing-social-media and any invalid form object
     const filtered = data.filter(f => f && typeof f.id === 'string' && f.id && f.id !== 'briefing-social-media');
 
-    // To prevent orphans and keep things strictly in sync:
-    // Fetch all current documents IDs from Firestore
-    const formsCol = collection(db, 'forms');
-    const snapshot = await getDocs(formsCol);
-    const databaseIds = new Set<string>();
-    snapshot.forEach((docSnap) => {
-      databaseIds.add(docSnap.id);
-    });
-
-    const incomingIds = new Set(filtered.map(f => f.id));
-
-    // Delete any documents that are no longer present in incoming data list
-    // Save/skip the healthcheck file and any other connection verification artifacts
-    for (const id of databaseIds) {
-      if (id === 'healthcheck_connection_test' || id === '_connection_test' || id === 'status') {
-        continue;
-      }
-      if (!incomingIds.has(id)) {
-        console.log(`Deleting form document ${id} from Firestore...`);
-        await deleteDoc(doc(db, 'forms', id));
-      }
-    }
-
     // Upsert or write current forms
     for (const form of filtered) {
       if (!form.id) continue;
@@ -685,13 +662,12 @@ async function startServer() {
   // Delete form
   app.delete('/api/forms/:id', async (req, res) => {
     try {
-      const db = await readDB();
-      const index = db.findIndex(f => f.id === req.params.id);
-      if (index === -1) {
+      const formDocRef = doc(db, 'forms', req.params.id);
+      const snap = await getDoc(formDocRef);
+      if (!snap.exists()) {
         return res.status(404).json({ error: 'Formulário não encontrado.' });
       }
-      db.splice(index, 1);
-      await writeDB(db);
+      await deleteDoc(formDocRef);
       res.json({ success: true });
     } catch (err) {
       console.error('Error deleting form:', err);
@@ -703,17 +679,18 @@ async function startServer() {
   app.delete('/api/forms/:formId/responses/:responseId', async (req, res) => {
     try {
       const { formId, responseId } = req.params;
-      const db = await readDB();
-      const form = db.find(f => f.id === formId);
-      if (!form) {
+      const formDocRef = doc(db, 'forms', formId);
+      const snap = await getDoc(formDocRef);
+      if (!snap.exists()) {
         return res.status(404).json({ error: 'Formulário não encontrado.' });
       }
-      const rIdx = form.responses.findIndex(r => r.id === responseId);
+      const formData = snap.data() as DBForm;
+      const rIdx = formData.responses ? formData.responses.findIndex(r => r.id === responseId) : -1;
       if (rIdx === -1) {
         return res.status(404).json({ error: 'Resposta não encontrada.' });
       }
-      form.responses.splice(rIdx, 1);
-      await writeDB(db);
+      formData.responses.splice(rIdx, 1);
+      await setDoc(formDocRef, formData);
       res.json({ success: true });
     } catch (err) {
       console.error('Error deleting response:', err);
@@ -729,12 +706,14 @@ async function startServer() {
         return res.status(400).json({ error: 'Nome do respondente e respostas são obrigatórios.' });
       }
 
-      const db = await readDB();
-      const form = db.find(f => f.id === req.params.id);
-      if (!form) {
+      const formId = req.params.id;
+      const formDocRef = doc(db, 'forms', formId);
+      const snap = await getDoc(formDocRef);
+      if (!snap.exists()) {
         return res.status(404).json({ error: 'Formulário não encontrado.' });
       }
 
+      const formData = snap.data() as DBForm;
       const newResponse: FormResponse = {
         id: 'resp_' + Math.random().toString(36).substring(2, 11),
         submittedAt: new Date().toISOString(),
@@ -742,9 +721,10 @@ async function startServer() {
         answers
       };
 
-      if (!form.responses) form.responses = [];
-      form.responses.unshift(newResponse);
-      await writeDB(db);
+      if (!formData.responses) formData.responses = [];
+      formData.responses.unshift(newResponse);
+      
+      await setDoc(formDocRef, formData);
 
       res.json({ success: true, response: newResponse });
     } catch (err) {
@@ -766,9 +746,8 @@ async function startServer() {
     if (structuredForm) {
       try {
         console.log("Structured prompt detected. Processing programmatically with 100% fidelity.");
-        const db = await readDB();
-        db.unshift(structuredForm);
-        await writeDB(db);
+        const formDocRef = doc(db, 'forms', structuredForm.id);
+        await setDoc(formDocRef, structuredForm);
         return res.json(structuredForm);
       } catch (err) {
         console.error('Failed to save structured form:', err);
@@ -782,7 +761,7 @@ async function startServer() {
       const mockForm: DBForm = {
         id: 'form_' + Math.random().toString(36).substring(2, 11),
         title: `Formulário Gerado: ${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}`,
-        description: `Formulário gerado de forma simulada para: "${prompt}". Configure a chave GEMINI_API_KEY em Secrets para gerar com IA real.`,
+        description: `Formulário gerado de forma simulada para: "${prompt}". Configure a verdade de GEMINI_API_KEY em Secrets para gerar com IA real.`,
         createdAt: new Date().toISOString(),
         questions: [
           { id: 'q_nome', type: 'text', label: 'Nome Completo', required: true },
@@ -795,9 +774,8 @@ async function startServer() {
       };
 
       try {
-        const db = await readDB();
-        db.unshift(mockForm);
-        await writeDB(db);
+        const formDocRef = doc(db, 'forms', mockForm.id);
+        await setDoc(formDocRef, mockForm);
         return res.json(mockForm);
       } catch (err) {
         console.error('Failed to save fallback form:', err);
@@ -901,9 +879,8 @@ async function startServer() {
         responses: []
       };
 
-      const db = await readDB();
-      db.unshift(newForm);
-      await writeDB(db);
+      const formDocRef = doc(db, 'forms', newForm.id);
+      await setDoc(formDocRef, newForm);
 
       res.json(newForm);
     } catch (err) {
@@ -924,9 +901,8 @@ async function startServer() {
       };
 
       try {
-        const db = await readDB();
-        db.unshift(genericForm);
-        await writeDB(db);
+        const formDocRef = doc(db, 'forms', genericForm.id);
+        await setDoc(formDocRef, genericForm);
         res.json(genericForm);
       } catch (saveErr) {
         console.error('Error saving generic fallback form:', saveErr);
