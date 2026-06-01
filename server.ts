@@ -105,7 +105,7 @@ async function readDB(): Promise<DBForm[]> {
         if (Array.isArray(localForms) && localForms.length > 0) {
           console.log(`Discovered local forms in ${DB_PATH}. Migrating ${localForms.length} forms to Firestore cloud database...`);
           for (const form of localForms) {
-            if (form.id === 'briefing-social-media') continue;
+            if (!form || !form.id || form.id === 'briefing-social-media') continue;
             const formDocRef = doc(db, 'forms', form.id);
             await setDoc(formDocRef, form);
           }
@@ -125,11 +125,18 @@ async function readDB(): Promise<DBForm[]> {
     const forms: DBForm[] = [];
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      forms.push(data as DBForm);
+      // Ensure the document contains a valid ID and belongs to a form structure
+      if (data && typeof data.id === 'string' && data.id) {
+        forms.push(data as DBForm);
+      }
     });
 
-    // Sort forms by createdAt descending
-    forms.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    // Safe Sort forms by createdAt descending (avoid NaN sorting)
+    forms.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return (Number.isNaN(dateB) ? 0 : dateB) - (Number.isNaN(dateA) ? 0 : dateA);
+    });
 
     // Filter out briefing-social-media demo form
     return forms.filter(f => f.id !== 'briefing-social-media');
@@ -142,8 +149,8 @@ async function readDB(): Promise<DBForm[]> {
 async function writeDB(data: DBForm[]) {
   try {
     console.log('Writing forms to Firestore cloud database...');
-    // Filter out briefing-social-media
-    const filtered = data.filter(f => f.id !== 'briefing-social-media');
+    // Filter out briefing-social-media and any invalid form object
+    const filtered = data.filter(f => f && typeof f.id === 'string' && f.id && f.id !== 'briefing-social-media');
 
     // To prevent orphans and keep things strictly in sync:
     // Fetch all current documents IDs from Firestore
@@ -157,7 +164,11 @@ async function writeDB(data: DBForm[]) {
     const incomingIds = new Set(filtered.map(f => f.id));
 
     // Delete any documents that are no longer present in incoming data list
+    // Save/skip the healthcheck file and any other connection verification artifacts
     for (const id of databaseIds) {
+      if (id === 'healthcheck_connection_test' || id === '_connection_test' || id === 'status') {
+        continue;
+      }
       if (!incomingIds.has(id)) {
         console.log(`Deleting form document ${id} from Firestore...`);
         await deleteDoc(doc(db, 'forms', id));
@@ -166,6 +177,7 @@ async function writeDB(data: DBForm[]) {
 
     // Upsert or write current forms
     for (const form of filtered) {
+      if (!form.id) continue;
       const formDocRef = doc(db, 'forms', form.id);
       await setDoc(formDocRef, form);
     }
