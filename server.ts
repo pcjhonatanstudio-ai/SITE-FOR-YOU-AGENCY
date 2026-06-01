@@ -587,8 +587,8 @@ function tryParseStructuredPrompt(prompt: string): DBForm | null {
 
   return {
     id: 'form_' + Math.random().toString(36).substring(2, 11),
-    title,
-    description,
+    title: title.substring(0, 250),
+    description: description.substring(0, 9000),
     createdAt: new Date().toISOString(),
     questions: finalQuestions,
     responses: []
@@ -760,8 +760,8 @@ async function startServer() {
       console.warn("GEMINI_API_KEY is not defined. Falling back to mock generator.");
       const mockForm: DBForm = {
         id: 'form_' + Math.random().toString(36).substring(2, 11),
-        title: `Formulário Gerado: ${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}`,
-        description: `Formulário gerado de forma simulada para: "${prompt}". Configure a verdade de GEMINI_API_KEY em Secrets para gerar com IA real.`,
+        title: `Formulário Gerado: ${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}`.substring(0, 250),
+        description: `Formulário gerado de forma simulada para: "${prompt}". Configure a verdade de GEMINI_API_KEY em Secrets para gerar com IA real.`.substring(0, 9000),
         createdAt: new Date().toISOString(),
         questions: [
           { id: 'q_nome', type: 'text', label: 'Nome Completo', required: true },
@@ -872,8 +872,8 @@ async function startServer() {
       
       const newForm: DBForm = {
         id: 'form_' + Math.random().toString(36).substring(2, 11),
-        title: parsedData.title || `Formulário sobre ${prompt}`,
-        description: parsedData.description || `Por favor, complete as perguntas com calma para começarmos o planejamento estratégico.`,
+        title: (parsedData.title || `Formulário sobre ${prompt}`).substring(0, 250),
+        description: (parsedData.description || `Por favor, complete as perguntas com calma para começarmos o planejamento estratégico.`).substring(0, 9000),
         createdAt: new Date().toISOString(),
         questions: parsedData.questions || [],
         responses: []
@@ -887,8 +887,8 @@ async function startServer() {
       console.error("Gemini invocation failed, using smart fallback:", err);
       const genericForm: DBForm = {
         id: 'form_' + Math.random().toString(36).substring(2, 11),
-        title: `Briefing Personalizado: ${prompt}`,
-        description: `Formulário estratégico gerado dinamicamente para: "${prompt}".`,
+        title: `Briefing Personalizado: ${prompt}`.substring(0, 250),
+        description: `Formulário estratégico gerado dinamicamente para: "${prompt}".`.substring(0, 9000),
         createdAt: new Date().toISOString(),
         questions: [
           { id: 'q_nome', type: 'text', label: 'Nome Completo', required: true },
