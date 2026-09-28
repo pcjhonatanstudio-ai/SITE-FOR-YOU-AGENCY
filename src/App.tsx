@@ -5,6 +5,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import FormsPortal from './components/FormsPortal';
+import PublicForm from './components/PublicForm';
 import { 
   MessageCircle, 
   ArrowRight, 
@@ -616,13 +618,12 @@ export default function App() {
             { name: 'Início', href: '#hero' },
             { name: 'Sobre Nós', href: '#sobre' },
             { name: 'Serviços', href: '#servicos' },
-            { name: 'Formulários', href: '/formularios', isPortal: true },
             { name: 'Contato', href: '#cta' }
           ].map((item) => (
             <li key={item.name}>
               <a 
                 href={item.href} 
-                onClick={(e) => handleNavClick(e, item.href, item.isPortal)}
+                onClick={(e) => handleNavClick(e, item.href)}
                 className="text-muted hover:text-white transition-colors relative group cursor-pointer"
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}
@@ -672,13 +673,12 @@ export default function App() {
               { name: 'Início', href: '#hero' },
               { name: 'Sobre Nós', href: '#sobre' },
               { name: 'Serviços', href: '#servicos' },
-              { name: 'Formulários', href: '/formularios', isPortal: true },
               { name: 'Contato', href: '#cta' }
             ].map((item) => (
               <a 
                 key={item.name} 
                 href={item.href} 
-                onClick={(e) => handleNavClick(e, item.href, item.isPortal)} 
+                onClick={(e) => handleNavClick(e, item.href)} 
                 className="text-muted hover:text-accent transition-colors cursor-pointer"
               >
                 {item.name}
