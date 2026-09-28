@@ -199,29 +199,6 @@ const DIFFERENTIALS: Differential[] = [
 ];
 
 
-const TypingEffect = ({ text }: { text: string }) => {
-  const [displayedText, setDisplayedText] = useState("");
-
-  useEffect(() => {
-    let index = 0;
-    setDisplayedText(""); 
-    
-    const timer = setInterval(() => {
-      index++;
-      setDisplayedText(text.substring(0, index));
-      if (index >= text.length) {
-        clearInterval(timer);
-      }
-    }, 100);
-    
-    return () => clearInterval(timer);
-  }, [text]);
-
-  return <>{displayedText}<span className="animate-pulse">|</span></>;
-};
-
-const TextToType = "Sua marca não precisa apenas aparecer, precisa liderar o mercado. Posicionamento estratégico e engajamento que transformam audiência em uma potência digital.";
-
 const VideoItem = ({ src, title }: { src: string; title?: string }) => {
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -753,7 +730,7 @@ export default function App() {
             transition={{ delay: 0.3 }}
             className="text-[clamp(1rem,2vw,1.15rem)] text-muted max-w-[750px] mx-auto mb-10 font-light"
           >
-            <TypingEffect text={TextToType} />
+            Sua marca não precisa apenas aparecer, precisa liderar o mercado. Posicionamento estratégico e engajamento que transformam audiência em uma potência digital.
           </motion.p>
 
 
