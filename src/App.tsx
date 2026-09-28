@@ -223,20 +223,23 @@ const VideoItem = ({ src, title }: { src: string; title?: string }) => {
 
   return (
     <div 
-      className="w-full h-full relative cursor-pointer group overflow-hidden bg-black" 
+      className="w-full h-full relative cursor-pointer group overflow-hidden bg-black select-none" 
       onClick={toggleMute}
     >
       <iframe 
         ref={iframeRef}
         src={`https://www.youtube.com/embed/${src}?controls=0&modestbranding=1&rel=0&loop=1&playlist=${src}&autoplay=1&mute=1&playsinline=1&enablejsapi=1&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&autohide=1&vq=hd1080`}
-        className="w-[120%] h-[120%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none object-cover"
+        className="w-full h-full absolute inset-0 scale-[1.46] origin-center pointer-events-none object-cover max-w-none"
         title={title}
         allow="autoplay; encrypted-media; picture-in-picture"
         allowFullScreen
       />
       
+      {/* Vinheta inferior para acabamento limpo */}
+      <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none z-10" />
+
       {/* Indicador de Som */}
-      <div className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 shadow-lg">
+      <div className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 shadow-lg">
         {isMuted ? (
           <VolumeX className="w-5 h-5 opacity-80" />
         ) : (
@@ -771,7 +774,7 @@ export default function App() {
             className="flex justify-center gap-x-10 gap-y-10 mt-20 pt-15 border-t border-border flex-wrap"
           >
             {[
-              { num: '120', label: 'Projetos Entregues', accent: true },
+              { num: '500', label: 'Projetos Entregues', accent: true },
               { num: '98', label: 'Satisfação dos Clientes', suffix: '%' },
               { num: '3x', label: 'ROI Médio Gerado', accent: true },
               { num: '24', label: 'Suporte Disponível', suffix: 'h' },
