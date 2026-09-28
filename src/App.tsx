@@ -5,8 +5,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import FormsPortal from './components/FormsPortal';
-import PublicForm from './components/PublicForm';
 import { 
   MessageCircle, 
   ArrowRight, 
