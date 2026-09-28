@@ -33,13 +33,12 @@ import {
   Volume2,
   VolumeX,
   Rocket,
-  Bot,
   Calendar,
-  RotateCcw,
-  Megaphone,
   TrendingUp,
   CheckCircle,
-  Flame,
+  Camera,
+  Sparkles,
+  Award,
 } from 'lucide-react';
 
 // --- Types ---
@@ -124,9 +123,9 @@ const SERVICES: Service[] = [
   {
     id: 's6',
     num: '06',
-    title: 'Vendas Automáticas c/ IA',
-    desc: 'O sistema definitivo para Médicos e Clínicas. Nossa tecnologia capta, categoriza e agenda pacientes via IA de forma 100% automatizada.',
-    icon: <Zap className="w-6 h-6" />,
+    title: 'Tráfego Pago e Performance',
+    desc: 'Campanhas estratégicas de alta precisão para atração de clientes qualificados e escala de faturamento para sua empresa.',
+    icon: <TrendingUp className="w-6 h-6" />,
   },
 ];
 
@@ -181,11 +180,11 @@ const FIFTEEN_PHOTOS: MediaItem[] = [
 ];
 
 const TESTIMONIALS: Testimonial[] = [
-  { id: 't1', text: '"A For You Agency transformou completamente nosso processo de atendimento. Com o bot no WhatsApp, economizamos horas e triplicamos a taxa de conversão. Resultado excepcional."', author: 'Marcos Rodrigues', role: 'CEO · Rodrigues Imóveis', avatar: 'MR', avatarColor: 'from-accent to-accent2' },
+  { id: 't1', text: '"A For You Agency transformou completamente a nossa presença digital. O novo posicionamento e os vídeos produzidos triplicaram nossa taxa de conversão. Resultado excepcional."', author: 'Marcos Rodrigues', role: 'CEO · Rodrigues Imóveis', avatar: 'MR', avatarColor: 'from-accent to-accent2' },
   { id: 't2', text: '"O site que eles criaram para a minha loja superou todas as expectativas. O design é incrível, o carregamento é rápido e as vendas aumentaram 240% em dois meses."', author: 'Juliana Santos', role: 'Fundadora · Estilo Único Store', avatar: 'JS', avatarColor: 'from-[#5BE5FF] to-[#3bb5d0]' },
   { id: 't3', text: '"Profissionalismo impecável do início ao fim. O atendimento é rápido, a entrega foi no prazo e o resultado ficou muito acima do esperado. Recomendo sem hesitar."', author: 'Carlos Almeida', role: 'Diretor · Almeida Consultoria', avatar: 'CA', avatarColor: 'from-[#f7971e] to-[#ffd200]' },
-  { id: 't4', text: '"A automação do nosso funil de vendas foi um divisor de águas. Hoje captamos leads 24h por dia sem precisar de uma equipe grande. A For You entregou exatamente o que prometeu."', author: 'Patricia Lima', role: 'CMO · Nexus Digital', avatar: 'PL', avatarColor: 'from-[#da22ff] to-[#9733ee]' },
-  { id: 't5', text: '"Contratei a For You para criar meu site e bot e foi a melhor decisão do ano. Meu negócio cresceu 180% nos primeiros 3 meses após a implementação. Equipe incrível!"', author: 'Rafael Ferreira', role: 'Empreendedor · RF Cursos Online', avatar: 'RF', avatarColor: 'from-[#11998e] to-[#38ef7d]' },
+  { id: 't4', text: '"A estratégia visual e o tráfego desenhados pela For You foram um divisor de águas. Hoje captamos clientes qualificados com consistência. A For You entregou exatamente o que prometeu."', author: 'Patricia Lima', role: 'CMO · Nexus Digital', avatar: 'PL', avatarColor: 'from-[#da22ff] to-[#9733ee]' },
+  { id: 't5', text: '"Contratei a For You para criar nosso novo site e produzir o material audiovisual institucional e foi a melhor decisão do ano. Nosso negócio cresceu 180% nos primeiros 3 meses. Equipe incrível!"', author: 'Rafael Ferreira', role: 'Empreendedor · RF Cursos Online', avatar: 'RF', avatarColor: 'from-[#11998e] to-[#38ef7d]' },
 ];
 
 const DIFFERENTIALS: Differential[] = [
@@ -193,7 +192,7 @@ const DIFFERENTIALS: Differential[] = [
   { id: 'd2', title: 'Foco em Resultados', text: 'Cada decisão tomada com base em dados e orientada ao retorno sobre o seu investimento.', icon: <CheckCircle2 className="w-5 h-5" /> },
   { id: 'd3', title: 'Design Exclusivo', text: 'Sem templates prontos. Cada projeto criado do zero, personalizado para a identidade da sua marca.', icon: <Monitor className="w-5 h-5" /> },
   { id: 'd4', title: 'Entrega no Prazo', text: 'Cronograma respeitado em 100% dos projetos. Planejamento sério, execução impecável.', icon: <Activity className="w-5 h-5" /> },
-  { id: 'd5', title: 'Tecnologia de Ponta', text: 'Utilizamos as ferramentas mais modernas do mercado para automação, IA e desenvolvimento web.', icon: <ShieldCheck className="w-5 h-5" /> },
+  { id: 'd5', title: 'Tecnologia de Ponta', text: 'Equipamentos de ponta e as ferramentas mais modernas do mercado para audiovisual, design e web.', icon: <ShieldCheck className="w-5 h-5" /> },
   { id: 'd6', title: 'Suporte Dedicado', text: 'Acompanhamos você após a entrega. Não somos fornecedores, somos parceiros de crescimento.', icon: <Users className="w-5 h-5" /> },
   { id: 'd7', title: 'Custo-Benefício Real', text: 'Qualidade premium com preço justo. Investimento que se paga rapidamente com os resultados gerados.', icon: <DollarSign className="w-5 h-5" /> },
   { id: 'd8', title: 'Análise de Métricas', text: 'Relatórios claros e objetivos. Você sempre sabe o que está acontecendo com seu investimento.', icon: <BarChart3 className="w-5 h-5" /> },
@@ -841,117 +840,91 @@ export default function App() {
 
       {/* Sobre Section */}
       <section id="sobre" className="bg-bg2 py-[clamp(60px,10vw,120px)] px-[5%]">
-        <div className="max-w-[800px] mx-auto flex flex-col gap-12">
+        <div className="max-w-[1000px] mx-auto flex flex-col gap-12">
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative aspect-[4/3] max-h-[560px] rounded-[24px] overflow-hidden bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center p-6"
+            className="text-center max-w-[760px] mx-auto"
           >
-            <img 
-              src="https://i.ibb.co/G3Q1cs7s/Chat-GPT-Image-3-de-mai-de-2026-12-44-15.png"
-              alt="CRM Inteligente"
-              className="w-full h-full object-contain rounded-[16px] z-10"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(125,249,194,0.06)_0%,transparent_50%),radial-gradient(circle_at_30%_80%,rgba(91,229,255,0.08),transparent_60%)]" />
+            <SectionTag>Sobre Nós</SectionTag>
+            <h2 className="font-display text-3xl md:text-5xl text-white font-medium mb-5 tracking-tight">
+              Criatividade, Estratégia e <span className="bg-gradient-to-r from-accent to-accent2 bg-clip-text text-transparent italic">Impacto Visual</span>
+            </h2>
+            <p className="text-gray-400 text-base md:text-lg leading-relaxed font-light">
+              A For You Agency é uma agência especializada em posicionamento de marcas, produções audiovisuais cinematográficas e ecossistemas digitais de alta conversão. Unimos direção artística, tecnologia e estratégia para transformar seu negócio em autoridade incontestável no mercado.
+            </p>
           </motion.div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.15 }}
-          >
-            <div className="flex flex-col gap-8">
-              <div className="flex flex-col gap-4">
-                <h3 className="font-display text-2xl md:text-4xl text-white flex items-center gap-3">
-                  <Rocket className="text-accent flex-shrink-0 w-8 h-8" /> 
-                  Transforme Conversas em Vendas com um CRM Inteligente + Robô de WhatsApp Humanizado
-                </h3>
-                <p className="text-gray-400 text-base md:text-lg leading-relaxed">
-                  Automatize seu atendimento, aumente suas conversões e transforme leads em lucro real — todos os dias, 24 horas por dia.
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-surface/50 border border-border rounded-2xl p-7 flex flex-col gap-4 relative overflow-hidden group hover:border-accent/30 transition-all"
+            >
+              <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <Camera className="w-6 h-6" />
               </div>
-              
-              <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
-                    <Bot className="text-accent flex-shrink-0 w-6 h-6" /> Atendimento Inteligente e Humanizado
-                  </h4>
-                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">
-                    Esqueça respostas robóticas e frias. Nosso robô utiliza Inteligência Artificial para criar conversas naturais, envolventes e estratégicas, simulando um atendimento humano real. Ele entende o momento do lead, responde com contexto e conduz a conversa com foco total na conversão.
-                  </p>
-                </div>
+              <h3 className="font-ui font-bold text-xl text-white group-hover:text-accent transition-colors">
+                Produção Audiovisual de Cinema
+              </h3>
+              <p className="text-muted text-sm leading-relaxed font-light">
+                Captação em altíssima resolução, equipamentos de cinema, iluminação profissional e edição cinematográfica que prende a atenção e valoriza a sua marca.
+              </p>
+            </motion.div>
 
-                <div className="flex flex-col gap-2">
-                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
-                    <TrendingUp className="text-accent flex-shrink-0 w-6 h-6" /> Gestão Completa de Leads
-                  </h4>
-                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Todos os seus leads são organizados automaticamente:</p>
-                  <ul className="pl-5 space-y-2 text-gray-400 text-sm md:text-base">
-                    <li className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div> Classificação por temperatura: Frios | Mornos | Quentes
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" /> Histórico completo de interações
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" /> Identificação de oportunidades em tempo real
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
-                    <DollarSign className="text-accent flex-shrink-0 w-6 h-6" /> Conversão Inteligente e Automática
-                  </h4>
-                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">O sistema não apenas responde… ele vende. Através de fluxos estratégicos e gatilhos de persuasão, o robô conduz o lead até a tomada de decisão.</p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
-                    <Calendar className="text-accent flex-shrink-0 w-6 h-6" /> Agendamentos 100% Automatizados
-                  </h4>
-                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Agendamento automático de reuniões, consultas e avaliações. Integração com Google Calendar e organização total da sua agenda sem esforço.</p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
-                    <RotateCcw className="text-accent flex-shrink-0 w-6 h-6" /> Recuperação de Leads Frios
-                  </h4>
-                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Após 48 horas sem interação, o sistema ativa automaticamente estratégias de reengajamento com mensagens personalizadas e abordagens persuasivas.</p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <h4 className="flex items-center gap-3 font-display text-xl md:text-2xl text-white">
-                    <Megaphone className="text-accent flex-shrink-0 w-6 h-6" /> Disparo de Campanhas Estratégicas
-                  </h4>
-                  <p className="text-gray-400 text-sm md:text-base leading-relaxed">Envie mensagens segmentadas e inteligentes: Campanhas promocionais, avisos importantes e muito mais com foco em resultado.</p>
-                </div>
-                
-                <div className="pt-6">
-                  <p className="flex items-center gap-2 text-white font-bold text-lg md:text-xl">
-                    <Flame className="text-accent w-6 h-6" /> Pronto para Automatizar e Crescer?
-                  </p>
-                </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-surface/50 border border-border rounded-2xl p-7 flex flex-col gap-4 relative overflow-hidden group hover:border-accent/30 transition-all"
+            >
+              <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <Monitor className="w-6 h-6" />
               </div>
-            </div>
+              <h3 className="font-ui font-bold text-xl text-white group-hover:text-accent transition-colors">
+                Websites & Presença Digital
+              </h3>
+              <p className="text-muted text-sm leading-relaxed font-light">
+                Desenvolvimento de sites ultra-rápidos, landing pages persuasivas e posicionamento no topo do Google (SEO) para atrair leads prontos para comprar.
+              </p>
+            </motion.div>
 
-            <div className="grid grid-cols-2 gap-4 mt-10">
-              {[
-                { icon: <CheckCircle2 className="w-5 h-5 text-accent" />, title: 'Foco em Resultados', text: 'Cada projeto entregue com métricas claras de ROI' },
-                { icon: <Zap className="w-5 h-5 text-accent" />, title: 'Entrega Ágil', text: 'Prazos cumpridos sem abrir mão da qualidade' },
-                { icon: <Activity className="w-5 h-5 text-accent" />, title: 'Tecnologia Moderna', text: 'Ferramentas de ponta para automação e IA' },
-                { icon: <Users className="w-5 h-5 text-accent" />, title: 'Parceria Real', text: 'Suporte dedicado e relacionamento de longo prazo' },
-              ].map((item, i) => (
-                <div key={i} className="bg-surface border border-border rounded-xl p-5 transition-all hover:border-accent/30 hover:-translate-y-0.5 group">
-                  <div className="mb-2.5">{item.icon}</div>
-                  <div className="font-ui font-bold text-[0.85rem] mb-1 group-hover:text-accent transition-colors">{item.title}</div>
-                  <div className="text-[0.8rem] text-muted leading-relaxed">{item.text}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-surface/50 border border-border rounded-2xl p-7 flex flex-col gap-4 relative overflow-hidden group hover:border-accent/30 transition-all"
+            >
+              <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+                <Rocket className="w-6 h-6" />
+              </div>
+              <h3 className="font-ui font-bold text-xl text-white group-hover:text-accent transition-colors">
+                Estratégia & Autoridade
+              </h3>
+              <p className="text-muted text-sm leading-relaxed font-light">
+                Construção de narrativas sólidas e roteirização estratégica para posicionar você como líder indiscutível no seu mercado de atuação.
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
+            {[
+              { icon: <CheckCircle2 className="w-5 h-5 text-accent" />, title: 'Foco em Resultados', text: 'Métricas claras de crescimento' },
+              { icon: <Zap className="w-5 h-5 text-accent" />, title: 'Entrega Ágil', text: 'Prazos cumpridos com rigor' },
+              { icon: <ShieldCheck className="w-5 h-5 text-accent" />, title: 'Padrão Premium', text: 'Excelência técnica e visual' },
+              { icon: <Users className="w-5 h-5 text-accent" />, title: 'Parceria Real', text: 'Suporte dedicado e contínuo' },
+            ].map((item, i) => (
+              <div key={i} className="bg-surface border border-border rounded-xl p-5 transition-all hover:border-accent/30 hover:-translate-y-0.5 group">
+                <div className="mb-2.5">{item.icon}</div>
+                <div className="font-ui font-bold text-[0.85rem] mb-1 group-hover:text-accent transition-colors">{item.title}</div>
+                <div className="text-[0.8rem] text-muted leading-relaxed">{item.text}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
       {/* Serviços Section */}
@@ -973,7 +946,7 @@ export default function App() {
               transition={{ delay: 0.1 }}
               className="text-muted text-[1.05rem] leading-[1.75] max-w-[320px] md:text-right font-light"
             >
-              Da criação do site ao atendimento automatizado — tudo integrado para maximizar seus resultados.
+              Da produção audiovisual ao desenvolvimento web de alta conversão — tudo integrado para maximizar seus resultados.
             </motion.p>
           </div>
 
@@ -1215,7 +1188,7 @@ export default function App() {
             <div>
               <div className="font-ui font-bold text-[0.8rem] tracking-widest uppercase text-white mb-5">Serviços</div>
               <div className="flex flex-col gap-2.5">
-                {['Sites Profissionais', 'Bots para WhatsApp', 'Automação', 'Marketing Digital', 'Landing Pages'].map((link) => (
+                {['Produção Audiovisual', 'Fotografia Profissional', 'Sites de Alta Performance', 'Marketing Digital', 'Tráfego Pago'].map((link) => (
                   <a key={link} href="#servicos" className="text-muted text-[0.875rem] hover:text-white transition-colors">{link}</a>
                 ))}
               </div>

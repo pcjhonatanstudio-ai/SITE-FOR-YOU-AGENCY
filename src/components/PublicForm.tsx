@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Bot, 
   Sparkles, 
   Send, 
   CheckCircle2, 
@@ -289,8 +288,8 @@ export default function PublicForm({ formId, navigate }: PublicFormProps) {
           <div className="flex flex-col sm:flex-row items-center gap-5 justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2 justify-center sm:justify-start">
-                <Bot className="w-4 h-4 text-accent" />
-                <span className="text-[11px] sm:text-[10px] tracking-widest text-[#2BDCAD] font-bold uppercase font-ui">Mapeamento Inteligente</span>
+                <Sparkles className="w-4 h-4 text-accent" />
+                <span className="text-[11px] sm:text-[10px] tracking-widest text-[#2BDCAD] font-bold uppercase font-ui">Mapeamento Estratégico</span>
                 <span className="w-1.5 h-1.5 bg-accent rounded-full animate-ping" />
               </div>
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import { 
-  Bot, 
   Sparkles, 
   Share2, 
   Trash2, 
@@ -87,7 +86,7 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
   const PROMPT_PRESETS = [
     { label: 'Briefing Social Media', text: 'Briefing completo para novos clientes de gestão de redes sociais, perguntando sobre nicho, público-alvo, cores, frequência de postagens e referências visuais.' },
     { label: 'Branding & Logotipo', text: 'Briefing de design para desenvolvimento de logotipo e identidade de marca corporativa, cobrindo história, valores da marca, cores preferidas e concorrentes.' },
-    { label: 'Aceleração de Vendas', text: 'Pesquisa estratégica de vendas e diagnóstico comercial para empresas interessadas em escalar faturamento com tráfego pago e funil de WhatsApp.' },
+    { label: 'Aceleração de Vendas', text: 'Pesquisa estratégica de vendas e diagnóstico comercial para empresas interessadas em escalar faturamento com tráfego pago e funil de alta conversão.' },
     { label: 'Feedback de Projetos', text: 'Formulário pós-venda para novos depoimentos e feedback sincero de satisfação após entrega de sites ou campanhas de tráfego.' }
   ];
 
@@ -478,7 +477,7 @@ export default function FormsPortal({ authToken, onLogin, onLogout, navigate }: 
                 <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
                 
                 <h3 className="font-display text-lg font-medium mb-1.5 flex items-center gap-2">
-                  <Bot className="text-accent w-5 h-5" /> 
+                  <Sparkles className="text-accent w-5 h-5" /> 
                   Gerador Automático de IA
                 </h3>
                 <p className="text-xs text-muted leading-relaxed mb-6">

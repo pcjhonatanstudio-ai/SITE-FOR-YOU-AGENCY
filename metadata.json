@@ -1,6 +1,6 @@
 {
   "name": "For You Agency",
-  "description": "Agência de Marketing Digital especializada em criação de sites, bots para WhatsApp, automação de atendimento e formulários inteligentes gerados por IA.",
+  "description": "Agência de Marketing Digital especializada em produção audiovisual cinematográfica, fotografia profissional, sites de alta performance e formulários estratégicos.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
