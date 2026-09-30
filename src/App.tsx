@@ -291,9 +291,30 @@ export const playHapticFeedback = (type: 'tap' | 'switch' | 'chime' = 'tap') => 
   }
 };
 
-const VideoItem = ({ src, title }: { src: string; title?: string }) => {
+const VideoItem = ({ src, id, title }: { src: string; id?: string; title?: string }) => {
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
+  const videoKey = id || src;
+
+  // Ouvir evento global para silenciar este vídeo quando outro tiver o áudio ativado
+  useEffect(() => {
+    const handleMuteOthers = (e: Event) => {
+      const customEvent = e as CustomEvent<{ activeKey: string }>;
+      if (customEvent.detail?.activeKey !== videoKey) {
+        setIsMuted(true);
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            JSON.stringify({ event: 'command', func: 'mute', args: '' }),
+            '*'
+          );
+        }
+      }
+    };
+
+    window.addEventListener('app-mute-other-videos', handleMuteOthers);
+    return () => window.removeEventListener('app-mute-other-videos', handleMuteOthers);
+  }, [videoKey]);
 
   const toggleMute = () => {
     const nextMuteState = !isMuted;
@@ -311,12 +332,35 @@ const VideoItem = ({ src, title }: { src: string; title?: string }) => {
         '*'
       );
     }
+
+    // Se ativou o áudio deste vídeo, silencia todos os outros vídeos da página
+    if (!nextMuteState) {
+      window.dispatchEvent(
+        new CustomEvent('app-mute-other-videos', { detail: { activeKey: videoKey } })
+      );
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerDownPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!pointerDownPos.current) return;
+    const dist = Math.hypot(e.clientX - pointerDownPos.current.x, e.clientY - pointerDownPos.current.y);
+    pointerDownPos.current = null;
+    // Se o dedo se moveu mais de 8px, foi um gesto de rolagem (vertical ou horizontal), não um clique
+    if (dist < 8) {
+      toggleMute();
+    }
   };
 
   return (
     <div 
-      className="w-full h-full relative cursor-pointer group overflow-hidden bg-black select-none" 
-      onClick={toggleMute}
+      className="w-full h-full relative cursor-pointer group overflow-hidden bg-black select-none touch-auto"
+      style={{ touchAction: 'pan-x pan-y' }}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
     >
       <iframe 
         ref={iframeRef}
@@ -442,7 +486,8 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
         onMouseLeave={handleMouseLeave}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-        className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-[5%] sm:px-0 touch-pan-x cursor-grab active:cursor-grabbing"
+        className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar snap-x pb-4 px-[5%] sm:px-0 cursor-grab active:cursor-grabbing"
+        style={{ touchAction: 'pan-x pan-y' }}
       >
         {items.map((item) => (
           <div 
@@ -450,7 +495,7 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
             className={`flex-shrink-0 snap-center bg-surface border border-border rounded-2xl overflow-hidden relative group ${item.type === 'video' ? 'w-[240px] sm:w-[280px] aspect-[9/16]' : 'w-[280px] sm:w-[320px] aspect-[3/4]'}`}
           >
             {item.type === 'video' ? (
-              <VideoItem src={item.src} title={item.title} />
+              <VideoItem id={item.id} src={item.src} title={item.title} />
             ) : (
               <img 
                 src={`https://lh3.googleusercontent.com/d/${item.src}`}
