@@ -39,6 +39,9 @@ import {
   Camera,
   Sparkles,
   Award,
+  Home,
+  Film,
+  Layers,
 } from 'lucide-react';
 
 // --- Types ---
@@ -198,6 +201,95 @@ const DIFFERENTIALS: Differential[] = [
   { id: 'd8', title: 'Análise de Métricas', text: 'Relatórios claros e objetivos. Você sempre sabe o que está acontecendo com seu investimento.', icon: <BarChart3 className="w-5 h-5" /> },
 ];
 
+// --- Audio Engine: Subtle iOS-like Haptic Clicks via Web Audio API ---
+let audioCtx: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext | null => {
+  if (typeof window === 'undefined') return null;
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+};
+
+export const playHapticFeedback = (type: 'tap' | 'switch' | 'chime' = 'tap') => {
+  // Mobile physical vibration if supported
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    try {
+      navigator.vibrate(type === 'chime' ? [10, 30, 15] : 10);
+    } catch {
+      // Ignore vibration error
+    }
+  }
+
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+
+    if (type === 'chime') {
+      // Delicate glass harmonic chime for WhatsApp / highlight action
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(880, now);
+      osc1.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
+
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1760, now);
+      osc2.frequency.exponentialRampToValueAtTime(2200, now + 0.08);
+
+      gain.gain.setValueAtTime(0.045, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.13);
+      osc2.stop(now + 0.13);
+    } else {
+      // Subtle, satisfying iOS dynamic island tactile soft bubble-pop
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(type === 'switch' ? 1400 : 1050, now);
+
+      osc.type = 'sine';
+      const startFreq = type === 'switch' ? 620 : 490;
+      const endFreq = type === 'switch' ? 320 : 210;
+
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.045);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.055, now + 0.003);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.052);
+    }
+  } catch {
+    // Graceful fallback
+  }
+};
 
 const VideoItem = ({ src, title }: { src: string; title?: string }) => {
   const [isMuted, setIsMuted] = useState(true);
@@ -467,6 +559,48 @@ export default function App() {
     }
   };
 
+  const [activeSection, setActiveSection] = useState('hero');
+
+  // Track active section on scroll for mobile liquid glass navbar
+  useEffect(() => {
+    const sectionIds = ['hero', 'showcase', 'sobre', 'servicos', 'depoimentos', 'cta'];
+    const onScroll = () => {
+      const scrollPos = window.scrollY + window.innerHeight * 0.35;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const id = sectionIds[i];
+        const el = document.getElementById(id);
+        if (el && el.offsetTop <= scrollPos) {
+          setActiveSection(id);
+          break;
+        }
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleMobileNavClick = (id: string, href: string, isExternal?: boolean, sound: 'tap' | 'switch' | 'chime' = 'tap') => {
+    playHapticFeedback(sound);
+    if (isExternal) {
+      window.open(href, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setActiveSection(id);
+    if (currentPath !== '/') {
+      window.history.pushState({}, '', '/');
+      setCurrentPath('/');
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 120);
+    } else {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isPortal?: boolean) => {
     if (isPortal) {
       e.preventDefault();
@@ -528,12 +662,12 @@ export default function App() {
       {/* Noise Overlay */}
       <div className="fixed inset-0 pointer-events-none z-[1000] opacity-[0.025] bg-[url('data:image/svg+xml,%3Csvg_viewBox=%270_0_200_200%27_xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter_id=%27n%27%3E%3CfeTurbulence_type=%27fractalNoise%27_baseFrequency=%270.9%27_numOctaves=%274%27_stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect_width=%27100%25%27_height=%27100%25%27_filter=%27url(%23n)%27_opacity=%271%27/%3E%3C/svg%3E')]" />
 
-      {/* WhatsApp Float */}
+      {/* WhatsApp Float (Desktop Only) */}
       <a 
         href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
         target="_blank" 
         rel="noreferrer"
-        className="fixed bottom-7 right-7 z-[400] w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] transition-all hover:scale-110 hover:shadow-[0_12px_40px_rgba(37,211,102,0.55)] group animate-pulse"
+        className="hidden md:flex fixed bottom-7 right-7 z-[400] w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] items-center justify-center shadow-[0_8px_30px_rgba(37,211,102,0.4)] transition-all hover:scale-110 hover:shadow-[0_12px_40px_rgba(37,211,102,0.55)] group animate-pulse"
       >
         <span className="absolute right-[68px] bg-surface border border-border px-3.5 py-2 rounded-xl font-ui text-[0.78rem] font-semibold whitespace-nowrap opacity-0 translate-x-2 pointer-events-none transition-all group-hover:opacity-100 group-hover:translate-x-0 shadow-xl">
           Falar no WhatsApp
@@ -542,6 +676,69 @@ export default function App() {
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
         </svg>
       </a>
+
+      {/* Mobile Liquid Glass Navbar (Fina, Compacta e Elegante com Botão WhatsApp Perfeito) */}
+      <nav 
+        className="md:hidden fixed bottom-4 inset-x-0 z-[550] flex justify-center pointer-events-auto select-none px-4"
+        aria-label="Navegação Mobile Liquid Glass"
+      >
+        <div className="relative w-full max-w-[340px] px-2.5 py-1.5 rounded-full bg-white/[0.08] backdrop-blur-2xl backdrop-saturate-[180%] border border-white/25 shadow-[0_12px_32px_rgba(0,0,0,0.65),inset_0_1px_1.5px_rgba(255,255,255,0.5),inset_0_-1px_1px_rgba(255,255,255,0.1)] flex items-center justify-between gap-1 overflow-hidden">
+          {/* Reflexo Especular Sutil no Topo do Vidro */}
+          <div className="absolute top-0 inset-x-6 h-[1px] bg-gradient-to-r from-transparent via-white/70 to-transparent pointer-events-none" />
+
+          {/* Abas de Navegação (Design fino e minimalista) */}
+          {[
+            { id: 'hero', label: 'Início', icon: <Home className="w-4 h-4" />, href: '#hero', sound: 'tap' as const },
+            { id: 'sobre', label: 'Sobre', icon: <Sparkles className="w-4 h-4" />, href: '#sobre', sound: 'tap' as const },
+            { id: 'servicos', label: 'Serviços', icon: <Layers className="w-4 h-4" />, href: '#servicos', sound: 'tap' as const },
+            { id: 'showcase', label: 'Showcase', icon: <Film className="w-4 h-4" />, href: '#showcase', sound: 'tap' as const },
+          ].map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <motion.button
+                key={item.id}
+                type="button"
+                whileTap={{ scale: 0.88 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                onClick={() => handleMobileNavClick(item.id, item.href, false, item.sound)}
+                className={`relative z-10 flex-1 py-1 px-1 flex flex-col items-center justify-center rounded-xl transition-colors cursor-pointer ${
+                  isActive ? 'text-white' : 'text-white/65 hover:text-white'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="liquidActiveBubble"
+                    className="absolute inset-0 rounded-xl bg-white/[0.14] border border-white/30 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.6),0_2px_8px_rgba(0,0,0,0.25)]"
+                    transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+                  />
+                )}
+                <span className={`relative z-10 transition-transform ${isActive ? 'scale-105 drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]' : ''}`}>
+                  {item.icon}
+                </span>
+                <span className={`relative z-10 text-[0.58rem] font-ui tracking-tight mt-0.5 whitespace-nowrap ${isActive ? 'font-semibold' : ''}`}>
+                  {item.label}
+                </span>
+              </motion.button>
+            );
+          })}
+
+          {/* Botão do WhatsApp Redondo e Verde Perfeito */}
+          <motion.a
+            href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento."
+            target="_blank"
+            rel="noreferrer"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+            onClick={() => playHapticFeedback('chime')}
+            aria-label="Falar no WhatsApp"
+            className="relative z-10 flex-shrink-0 w-9 h-9 rounded-full bg-[#25D366] hover:bg-[#20bd5a] flex items-center justify-center text-white shadow-[0_2px_12px_rgba(37,211,102,0.45)] border border-white/30 ml-0.5 cursor-pointer active:scale-90 transition-all"
+          >
+            <svg className="w-[18px] h-[18px] fill-current text-white" viewBox="0 0 24 24">
+              <path d="M20.52 3.48A11.93 11.93 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.09.55 4.14 1.59 5.95L0 24l6.3-1.65a11.9 11.9 0 0 0 5.75 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.48-8.41zm-8.47 18.35h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.89 9.89-9.89 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.44 9.89-9.89 9.89zm5.42-7.4c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.46-2.39-1.48-.88-.78-1.48-1.76-1.65-2.06-.18-.3-.02-.45.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.25-.6-.49-.51-.67-.52l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.06 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.34z" />
+            </svg>
+          </motion.a>
+        </div>
+      </nav>
 
       {/* Video Modal */}
       <AnimatePresence>
@@ -632,7 +829,11 @@ export default function App() {
 
         <button 
           className="md:hidden flex flex-col gap-1.5 p-1"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onClick={() => {
+            playHapticFeedback('tap');
+            setMobileMenuOpen(!mobileMenuOpen);
+          }}
+          aria-label="Abrir menu"
         >
           <span className={`block w-6 h-0.5 bg-white transition-all ${mobileMenuOpen ? 'translate-y-2 rotate-45' : ''}`} />
           <span className={`block w-6 h-0.5 bg-white transition-all ${mobileMenuOpen ? 'opacity-0' : ''}`} />
@@ -658,7 +859,10 @@ export default function App() {
               <a 
                 key={item.name} 
                 href={item.href} 
-                onClick={(e) => handleNavClick(e, item.href)} 
+                onClick={(e) => {
+                  playHapticFeedback('tap');
+                  handleNavClick(e, item.href);
+                }} 
                 className="text-muted hover:text-accent transition-colors cursor-pointer"
               >
                 {item.name}
@@ -668,6 +872,7 @@ export default function App() {
               href="https://wa.me/5522988356209?text=Olá! Vim pelo site e gostaria de solicitar um orçamento." 
               target="_blank" 
               rel="noreferrer" 
+              onClick={() => playHapticFeedback('chime')}
               className="bg-gradient-to-br from-[#25D366] to-[#128C7E] flex items-center justify-center gap-3 px-6 py-4 rounded-full text-white font-bold shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105 text-lg sm:text-xl"
             >
               <MessageCircle className="w-6 h-6" />
@@ -1130,7 +1335,7 @@ export default function App() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-bg2 border-t border-border pt-15 px-[5%] pb-10">
+      <footer className="bg-bg2 border-t border-border pt-15 px-[5%] pb-28 md:pb-10">
         <div className="max-w-[1200px] mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 mb-15">
             <div className="col-span-2 lg:col-span-1">
