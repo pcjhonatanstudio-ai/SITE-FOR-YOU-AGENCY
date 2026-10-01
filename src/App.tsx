@@ -394,6 +394,30 @@ const VideoItem = ({ src, id, title }: { src: string; id?: string; title?: strin
   );
 };
 
+// Variantes unificadas para o efeito de reveal suave (fade-in com leve movimento para cima)
+const revealVariants = {
+  hidden: { opacity: 0, y: 32 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    }
+  },
+};
+
+const staggerRevealContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    }
+  }
+};
+
 const SectionTag = ({ children, size = 'default' }: { children: React.ReactNode, size?: 'default' | 'large' }) => (
   <div className={`inline-flex items-center gap-2.5 font-ui font-bold tracking-[0.14em] uppercase text-accent mb-5 ${size === 'large' ? 'text-[0.9rem]' : 'text-[0.72rem]'}`}>
     <div className={`bg-accent ${size === 'large' ? 'w-8 h-[2px]' : 'w-6 h-[1.5px]'}`} />
@@ -455,7 +479,13 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
   };
 
   return (
-    <div className="mb-20 last:mb-0">
+    <motion.div 
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      className="mb-20 last:mb-0"
+    >
       <div className="flex justify-between items-end mb-8">
         <div>
           <SectionTag size={tag === 'Showcase' ? 'large' : 'default'}>{tag}</SectionTag>
@@ -508,7 +538,7 @@ const MediaCarousel = ({ title, items, tag }: { title?: string; items: MediaItem
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -1084,11 +1114,16 @@ export default function App() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={staggerRevealContainer}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          >
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              variants={revealVariants}
+              whileHover={{ y: -4, transition: { duration: 0.25 } }}
               className="bg-surface/50 border border-border rounded-2xl p-7 flex flex-col gap-4 relative overflow-hidden group hover:border-accent/30 transition-all"
             >
               <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
@@ -1103,10 +1138,8 @@ export default function App() {
             </motion.div>
 
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+              variants={revealVariants}
+              whileHover={{ y: -4, transition: { duration: 0.25 } }}
               className="bg-surface/50 border border-border rounded-2xl p-7 flex flex-col gap-4 relative overflow-hidden group hover:border-accent/30 transition-all"
             >
               <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
@@ -1121,10 +1154,8 @@ export default function App() {
             </motion.div>
 
             <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+              variants={revealVariants}
+              whileHover={{ y: -4, transition: { duration: 0.25 } }}
               className="bg-surface/50 border border-border rounded-2xl p-7 flex flex-col gap-4 relative overflow-hidden group hover:border-accent/30 transition-all"
             >
               <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
@@ -1137,22 +1168,33 @@ export default function App() {
                 Construção de narrativas sólidas e roteirização estratégica para posicionar você como líder indiscutível no seu mercado de atuação.
               </p>
             </motion.div>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={staggerRevealContainer}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2"
+          >
             {[
               { icon: <CheckCircle2 className="w-5 h-5 text-accent" />, title: 'Foco em Resultados', text: 'Métricas claras de crescimento' },
               { icon: <Zap className="w-5 h-5 text-accent" />, title: 'Entrega Ágil', text: 'Prazos cumpridos com rigor' },
               { icon: <ShieldCheck className="w-5 h-5 text-accent" />, title: 'Padrão Premium', text: 'Excelência técnica e visual' },
               { icon: <Users className="w-5 h-5 text-accent" />, title: 'Parceria Real', text: 'Suporte dedicado e contínuo' },
             ].map((item, i) => (
-              <div key={i} className="bg-surface border border-border rounded-xl p-5 transition-all hover:border-accent/30 hover:-translate-y-0.5 group">
+              <motion.div 
+                key={i} 
+                variants={revealVariants}
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                className="bg-surface border border-border rounded-xl p-5 transition-all hover:border-accent/30 group"
+              >
                 <div className="mb-2.5">{item.icon}</div>
                 <div className="font-ui font-bold text-[0.85rem] mb-1 group-hover:text-accent transition-colors">{item.title}</div>
                 <div className="text-[0.8rem] text-muted leading-relaxed">{item.text}</div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
       {/* Serviços Section */}
@@ -1178,15 +1220,19 @@ export default function App() {
             </motion.p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={staggerRevealContainer}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
             {SERVICES.map((service, i) => (
               <motion.div 
                 key={service.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="bg-surface border border-border rounded-xl p-9 relative overflow-hidden transition-all hover:border-accent/30 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_rgba(0,0,0,0.4)] group"
+                variants={revealVariants}
+                whileHover={{ y: -6, transition: { duration: 0.25 } }}
+                className="bg-surface border border-border rounded-xl p-9 relative overflow-hidden transition-all hover:border-accent/30 hover:shadow-[0_30px_60px_rgba(0,0,0,0.4)] group"
                 onMouseEnter={() => setIsHovering(true)}
                 onMouseLeave={() => setIsHovering(false)}
               >
@@ -1203,22 +1249,26 @@ export default function App() {
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Portfólio Section */}
       <section id="portfolio" className="bg-bg2 py-2.5 px-[5%]">
         <div className="max-w-[1200px] mx-auto">
-          <div className="grid grid-cols-12 gap-5">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={staggerRevealContainer}
+            className="grid grid-cols-12 gap-5"
+          >
             {PORTFOLIO.map((item, i) => (
               <motion.div 
                 key={item.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className={`relative rounded-[20px] overflow-hidden bg-surface border border-border aspect-[4/3] transition-all duration-500 hover:scale-[0.98] hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)] group cursor-pointer ${
+                variants={revealVariants}
+                whileHover={{ scale: 0.98, transition: { duration: 0.25 } }}
+                className={`relative rounded-[20px] overflow-hidden bg-surface border border-border aspect-[4/3] transition-all duration-500 hover:shadow-[0_40px_80px_rgba(0,0,0,0.6)] group cursor-pointer ${
                   i === 0 ? 'col-span-12 md:col-span-7' : 
                   i === 1 ? 'col-span-12 md:col-span-5' : 
                   'col-span-12 md:col-span-4'
@@ -1253,7 +1303,7 @@ export default function App() {
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1269,14 +1319,20 @@ export default function App() {
             <SectionTitle title="O que nossos clientes" em="dizem sobre nós" />
           </motion.div>
 
-          <div 
+          <motion.div 
             ref={testimonialsTrackRef}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={staggerRevealContainer}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-14 overflow-hidden"
           >
             {TESTIMONIALS.map((t) => (
-              <div 
+              <motion.div 
                 key={t.id}
-                className="bg-surface border border-border rounded-2xl p-5 relative overflow-hidden transition-all hover:border-accent/20 hover:-translate-y-1 group"
+                variants={revealVariants}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
+                className="bg-surface border border-border rounded-2xl p-5 relative overflow-hidden transition-all hover:border-accent/20 group cursor-default"
               >
                 <div className="absolute -top-2.5 right-4 font-serif text-8xl leading-none text-accent/5 pointer-events-none">❝</div>
                 <div className="flex gap-0.5 mb-2.5 text-accent text-[0.8rem]">
@@ -1292,9 +1348,9 @@ export default function App() {
                     <div className="text-[0.7rem] text-muted mt-0.5">{t.role}</div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1313,24 +1369,50 @@ export default function App() {
           </div>
 
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.12,
+                  delayChildren: 0.08,
+                }
+              }
+            }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border border-border rounded-[24px] overflow-hidden"
           >
             {DIFFERENTIALS.map((diff, i) => (
-              <div 
+              <motion.div 
                 key={diff.id}
-                className="p-10 bg-surface border-r border-b border-border transition-colors hover:bg-accent/5 relative group"
+                variants={{
+                  hidden: { 
+                    opacity: 0, 
+                    y: 36, 
+                    scale: 0.96 
+                  },
+                  visible: { 
+                    opacity: 1, 
+                    y: 0, 
+                    scale: 1,
+                    transition: { 
+                      duration: 0.55, 
+                      ease: [0.22, 1, 0.36, 1] 
+                    } 
+                  }
+                }}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
+                className="p-10 bg-surface border-r border-b border-border transition-colors hover:bg-accent/5 relative group cursor-default"
               >
-                <div className="w-12 h-12 bg-accent/5 border border-accent/10 rounded-xl flex items-center justify-center mb-5 group-hover:bg-accent/12 transition-colors">
-                  <div className="text-accent">{diff.icon}</div>
+                <div className="w-12 h-12 bg-accent/5 border border-accent/10 rounded-xl flex items-center justify-center mb-5 group-hover:bg-accent/15 group-hover:border-accent/30 group-hover:scale-105 transition-all duration-300">
+                  <div className="text-accent group-hover:scale-110 transition-transform duration-300">{diff.icon}</div>
                 </div>
-                <div className="font-ui font-bold text-[1rem] mb-2.5">{diff.title}</div>
+                <div className="font-ui font-bold text-[1rem] mb-2.5 text-white/95 group-hover:text-accent transition-colors duration-300">{diff.title}</div>
                 <div className="text-[0.85rem] text-muted leading-[1.6] font-light">{diff.text}</div>
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent to-accent2 scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-500" />
-              </div>
+              </motion.div>
             ))}
           </motion.div>
         </div>
@@ -1381,7 +1463,13 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-bg2 border-t border-border pt-15 px-[5%] pb-28 md:pb-10">
-        <div className="max-w-[1200px] mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-[1200px] mx-auto"
+        >
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-10 mb-15">
             <div className="col-span-2 lg:col-span-1">
               <img 
@@ -1461,7 +1549,7 @@ export default function App() {
             <p className="text-[0.8rem] text-muted">© 2025 <span className="text-accent">For You Agency</span>. Todos os direitos reservados.</p>
             <p className="text-[0.8rem] text-muted">Feito com ♥ e muita <span className="text-accent">tecnologia</span></p>
           </div>
-        </div>
+        </motion.div>
       </footer>
     </div>
   );
