@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import FormsPortal from './components/FormsPortal';
 import PublicForm from './components/PublicForm';
+import ScrollBackground from './components/ScrollBackground';
 import { 
   MessageCircle, 
   ArrowRight, 
@@ -718,6 +719,9 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen selection:bg-accent selection:text-bg overflow-x-hidden">
+      {/* Background de Animação por Scroll (180 Frames) */}
+      <ScrollBackground frameCount={180} />
+
       {/* Custom Cursor */}
       <div 
         className="fixed w-2.5 h-2.5 bg-accent rounded-full pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 mix-blend-screen transition-transform duration-100 hidden md:block"
@@ -959,7 +963,7 @@ export default function App() {
 
       {/* Hero Section */}
       <section id="hero" className="relative min-h-svh grid place-items-center px-[5%] pt-[120px] pb-20 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_60%_40%,rgba(125,249,194,0.07)_0%,transparent_60%),radial-gradient(ellipse_60%_50%_at_20%_70%,rgba(91,229,255,0.05)_0%,transparent_50%)] bg-bg" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_60%_40%,rgba(125,249,194,0.07)_0%,transparent_60%),radial-gradient(ellipse_60%_50%_at_20%_70%,rgba(91,229,255,0.05)_0%,transparent_50%)] bg-bg/40" />
         <div className="absolute inset-0 hero-grid-lines" />
         
         <motion.div 
@@ -1097,7 +1101,7 @@ export default function App() {
       </section>
 
       {/* Sobre Section */}
-      <section id="sobre" className="bg-bg2 py-[clamp(60px,10vw,120px)] px-[5%]">
+      <section id="sobre" className="bg-bg2/40 backdrop-blur-[2px] py-[clamp(60px,10vw,120px)] px-[5%]">
         <div className="max-w-[1000px] mx-auto flex flex-col gap-12">
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
@@ -1254,7 +1258,7 @@ export default function App() {
       </section>
 
       {/* Portfólio Section */}
-      <section id="portfolio" className="bg-bg2 py-2.5 px-[5%]">
+      <section id="portfolio" className="bg-bg2/40 backdrop-blur-[2px] py-2.5 px-[5%]">
         <div className="max-w-[1200px] mx-auto">
           <motion.div 
             initial="hidden"
@@ -1308,7 +1312,7 @@ export default function App() {
       </section>
 
       {/* Depoimentos Section */}
-      <section id="depoimentos" className="bg-bg2 py-[clamp(60px,10vw,120px)] px-[5%]">
+      <section id="depoimentos" className="bg-bg2/40 backdrop-blur-[2px] py-[clamp(60px,10vw,120px)] px-[5%]">
         <div className="max-w-[1200px] mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
